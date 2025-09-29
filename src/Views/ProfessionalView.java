@@ -103,10 +103,29 @@ public class ProfessionalView extends View {
         pauseBeforeMenu();
     }
 
+    private static Professional selectProfessionalById() {
+        try {
+            int professionalId = getInt("Enter professional ID: ", 1, Integer.MAX_VALUE);
+
+            return Professional.findById(professionalId);
+        }
+        catch (Exception e) {
+            showError("Failed to select professional ID: " + e.getMessage());
+            return null;
+        }
+    }
 
     private static void searchProfessionalById() {
-        showHeader("Search Professional by ID");
-        showWarning("Feature will be implemented in next phase");
+        showHeader("Search Employee by ID");
+
+        Professional professional = selectProfessionalById();
+        if (professional == null) {
+            showError("Professional not found.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        showProfessionalDetails(professional);
         pauseBeforeMenu();
     }
 
@@ -117,8 +136,37 @@ public class ProfessionalView extends View {
     }
 
     private static void deleteProfessional() {
-        showHeader("Delete Professional");
-        showWarning("Feature will be implemented in next phase");
+        showHeader("Delete Porfessional");
+
+        try {
+            Professional professional = selectProfessionalById();
+
+            if (professional == null){
+                showError("Professional not found.");
+                pauseBeforeMenu();
+                return;
+            };
+
+            // Confirm deletion
+            boolean confirm = getYesNo("Are you sure you want to delete this professional?");
+            if (!confirm) {
+                showWarning("Deletion cancelled.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            boolean deleted = Professional.delete(professional.getId());
+
+            if (deleted) {
+                showSuccess("Professional deleted successfully!");
+            } else {
+                showError("Failed to delete professional. Please try again.");
+            }
+
+        } catch (Exception e) {
+            showError("Error during deletion: " + e.getMessage());
+        }
+
         pauseBeforeMenu();
     }
 

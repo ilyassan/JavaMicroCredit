@@ -180,6 +180,48 @@ public class Professional extends Model {
         this.updatedAt = updatedAt;
     }
 
+    public static Professional findById(int professionalId) {
+        String sql = "SELECT * FROM Professional WHERE id = ?";
+
+        return withStatement(sql, stmt -> {
+            stmt.setInt(1, professionalId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Professional(
+                        rs.getInt("id"),
+                        rs.getString("firstName"),
+                        rs.getString("lastName"),
+                        rs.getObject("dateOfBirth", LocalDate.class),
+                        rs.getString("city"),
+                        rs.getBoolean("investment"),
+                        rs.getBoolean("placement"),
+                        rs.getInt("childrenCount"),
+                        FamilyStatus.valueOf(rs.getString("familyStatus")),
+                        rs.getDouble("score"),
+                        rs.getDouble("income"),
+                        rs.getString("taxRegistrationNumber"),
+                        SectorType.valueOf(rs.getString("businessSector")),
+                        rs.getString("activity"),
+                        rs.getObject("createdAt", LocalDateTime.class),
+                        rs.getObject("updatedAt", LocalDateTime.class)
+                );
+            }
+            return null;
+        });
+    }
+
+    public static boolean delete(Integer professionalId) {
+        String deleteSql = "DELETE FROM Professional WHERE id = ?";
+
+        return withStatement(deleteSql, stmt -> {
+            stmt.setInt(1, professionalId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        });
+    }
+
+
     public static List<Professional> getAll() {
         String sql = "SELECT * FROM Professional";
 
