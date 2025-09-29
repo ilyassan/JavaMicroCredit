@@ -10,24 +10,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Employee extends Model {
-    private Integer id;
-    private String firstName;
-    private String lastName;
-    private LocalDate dateOfBirth;
-    private String city;
-    private Boolean investment;
-    private Boolean placement;
-    private Integer childrenCount;
-    private FamilyStatus familyStatus;
-    private Double score;
+public class Employee extends Person {
     private Double salary;
     private Integer monthsInWork;
     private String position;
     private ContractType contractType;
     private SectorType employmentSector;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     public Employee() {}
 
@@ -46,93 +34,13 @@ public class Employee extends Model {
         this.childrenCount = childrenCount;
         this.familyStatus = familyStatus;
         this.score = score;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.salary = salary;
         this.monthsInWork = monthsInWork;
         this.position = position;
         this.contractType = contractType;
         this.employmentSector = employmentSector;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public Boolean getInvestment() {
-        return investment;
-    }
-
-    public void setInvestment(Boolean investment) {
-        this.investment = investment;
-    }
-
-    public Boolean getPlacement() {
-        return placement;
-    }
-
-    public void setPlacement(Boolean placement) {
-        this.placement = placement;
-    }
-
-    public Integer getChildrenCount() {
-        return childrenCount;
-    }
-
-    public void setChildrenCount(Integer childrenCount) {
-        this.childrenCount = childrenCount;
-    }
-
-    public FamilyStatus getFamilyStatus() {
-        return familyStatus;
-    }
-
-    public void setFamilyStatus(FamilyStatus familyStatus) {
-        this.familyStatus = familyStatus;
-    }
-
-    public Double getScore() {
-        return score;
-    }
-
-    public void setScore(Double score) {
-        this.score = score;
     }
 
     public Double getSalary() {
@@ -173,22 +81,6 @@ public class Employee extends Model {
 
     public void setEmploymentSector(SectorType employmentSector) {
         this.employmentSector = employmentSector;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public static List<Employee> getAll() {
