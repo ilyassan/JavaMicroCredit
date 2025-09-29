@@ -3,6 +3,7 @@ package Models;
 import Enums.ContractType;
 import Enums.FamilyStatus;
 import Enums.SectorType;
+import Services.ScoringService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.sql.ResultSet;
@@ -226,6 +227,17 @@ public class Employee extends Person {
                 employee.setEmploymentSector(employmentSector);
                 employee.setCreatedAt(LocalDateTime.now());
                 employee.setUpdatedAt(LocalDateTime.now());
+
+                double initialScore = ScoringService.calculateScore(employee);
+                employee.setScore(initialScore);
+
+                String updateScoreSql = "UPDATE Employee SET score = ? WHERE id = ?";
+                withStatement(updateScoreSql, updateStmt -> {
+                    updateStmt.setDouble(1, initialScore);
+                    updateStmt.setInt(2, employeeId);
+                    updateStmt.executeUpdate();
+                    return null;
+                });
 
                 return employee;
             }

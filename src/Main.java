@@ -2,6 +2,7 @@ import Views.View;
 import Views.EmployeeView;
 import Views.ProfessionalView;
 import Views.CreditView;
+import Views.AnalyticsView;
 
 public class Main extends View {
 
@@ -32,8 +33,7 @@ public class Main extends View {
                     pauseBeforeMenu();
                     break;
                 case 4:
-                    showWarning("ba9i");
-                    pauseBeforeMenu();
+                    AnalyticsView.showMenu();
                     break;
                 case 5:
                     showSuccess("Thank you for using JavaMicroCredit System!");

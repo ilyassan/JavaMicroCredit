@@ -293,6 +293,7 @@ public class EmployeeView extends View {
         }
         println("Contract Type: " + employee.getContractType());
         println("Employment Sector: " + employee.getEmploymentSector());
+        println("Score: " + (employee.getScore() != null ? employee.getScore() : "Not calculated"));
         println("Created At: " + employee.getCreatedAt());
         showSeparator();
     }

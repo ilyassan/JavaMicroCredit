@@ -292,6 +292,7 @@ public class ProfessionalView extends View {
         if (professional.getActivity() != null) {
             println("Activity: " + professional.getActivity());
         }
+        println("Score: " + (professional.getScore() != null ? professional.getScore() : "Not calculated"));
         println("Created At: " + professional.getCreatedAt());
         showSeparator();
     }
