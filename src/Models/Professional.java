@@ -1,9 +1,14 @@
 package Models;
 
+import Enums.ContractType;
 import Enums.FamilyStatus;
 import Enums.SectorType;
+
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Professional extends Model {
     private Integer id;
@@ -173,6 +178,38 @@ public class Professional extends Model {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public static List<Professional> getAll() {
+        String sql = "SELECT * FROM Professional";
+
+        return withStatement(sql, stmt -> {
+            ResultSet rs = stmt.executeQuery();
+            List<Professional> professionals = new ArrayList<>();
+            while (rs.next()) {
+                professionals.add(
+                        new Professional(
+                                rs.getInt("id"),
+                                rs.getString("firstName"),
+                                rs.getString("lastName"),
+                                rs.getObject("dateOfBirth", LocalDate.class),
+                                rs.getString("city"),
+                                rs.getBoolean("investment"),
+                                rs.getBoolean("placement"),
+                                rs.getInt("childrenCount"),
+                                FamilyStatus.valueOf(rs.getString("familyStatus")),
+                                rs.getDouble("score"),
+                                rs.getDouble("income"),
+                                rs.getString("taxRegistrationNumber"),
+                                SectorType.valueOf(rs.getString("businessSector")),
+                                rs.getString("activity"),
+                                rs.getObject("createdAt", LocalDateTime.class),
+                                rs.getObject("updatedAt", LocalDateTime.class)
+                        )
+                );
+            }
+            return professionals;
+        });
     }
 
     public static Professional create(String firstName, String lastName, LocalDate dateOfBirth, String city,

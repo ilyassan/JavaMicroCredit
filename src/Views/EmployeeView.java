@@ -5,6 +5,8 @@ import Enums.ContractType;
 import Enums.FamilyStatus;
 import Enums.SectorType;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmployeeView extends View {
 
@@ -122,7 +124,11 @@ public class EmployeeView extends View {
 
     private static void listAllEmployees() {
         showHeader("List All Employees");
-        showWarning("Ba9i MA DRTHACH");
+        List<Employee> employees = Employee.getAll();
+
+        for (Employee employee : employees) {
+            showEmployeeDetails(employee);
+        }
         pauseBeforeMenu();
     }
 

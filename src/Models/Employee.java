@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Employee extends Model {
     private Integer id;
@@ -187,6 +189,39 @@ public class Employee extends Model {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public static List<Employee> getAll() {
+        String sql = "SELECT * FROM Employee";
+
+        return withStatement(sql, stmt -> {
+            ResultSet rs = stmt.executeQuery();
+            List<Employee> employees = new ArrayList<>();
+            while (rs.next()) {
+                employees.add(
+                        new Employee(
+                                rs.getInt("id"),
+                                rs.getString("firstName"),
+                                rs.getString("lastName"),
+                                rs.getObject("dateOfBirth", LocalDate.class),
+                                rs.getString("city"),
+                                rs.getBoolean("investment"),
+                                rs.getBoolean("placement"),
+                                rs.getInt("childrenCount"),
+                                FamilyStatus.valueOf(rs.getString("familyStatus")),
+                                rs.getDouble("score"),
+                                rs.getDouble("salary"),
+                                rs.getInt("monthsInWork"),
+                                rs.getString("position"),
+                                ContractType.valueOf(rs.getString("contractType")),
+                                SectorType.valueOf(rs.getString("employmentSector")),
+                                rs.getObject("createdAt", LocalDateTime.class),
+                                rs.getObject("updatedAt", LocalDateTime.class)
+                        )
+                );
+            }
+            return employees;
+        });
     }
 
     public static Employee create(String firstName, String lastName, LocalDate dateOfBirth, String city,

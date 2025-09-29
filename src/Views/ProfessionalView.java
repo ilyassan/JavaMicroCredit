@@ -1,9 +1,11 @@
 package Views;
 
+import Models.Employee;
 import Models.Professional;
 import Enums.FamilyStatus;
 import Enums.SectorType;
 import java.time.LocalDate;
+import java.util.List;
 
 public class ProfessionalView extends View {
 
@@ -122,7 +124,12 @@ public class ProfessionalView extends View {
 
     private static void listAllProfessionals() {
         showHeader("List All Professionals");
-        showWarning("Feature will be implemented in next phase");
+        List<Professional> professionals = Professional.getAll();
+
+        for (Professional professional : professionals) {
+            showProfessionalDetails(professional);
+        }
+
         pauseBeforeMenu();
     }
 
