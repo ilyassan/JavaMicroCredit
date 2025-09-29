@@ -120,4 +120,44 @@ public class Credit extends Model {
     public boolean isForProfessional() {
         return professionalId != null;
     }
+
+    public static Credit create(Integer employeeId, Integer professionalId, LocalDate creditDate,
+                               Double requestedAmount, Double approvedAmount, Double interestRate,
+                               Integer durationInMonths, CreditType creditType, DecisionEnum decision) {
+        String insertSql = "INSERT INTO Credit (employeeId, professionalId, creditDate, requestedAmount, approvedAmount, interestRate, durationInMonths, creditType, decision) VALUES (?, ?, ?, ?, ?, ?, ?, ?::CreditType, ?::DecisionEnum)";
+
+        return withStatementReturning(insertSql, stmt -> {
+            stmt.setObject(1, employeeId);
+            stmt.setObject(2, professionalId);
+            stmt.setObject(3, creditDate);
+            stmt.setDouble(4, requestedAmount);
+            stmt.setDouble(5, approvedAmount);
+            stmt.setDouble(6, interestRate);
+            stmt.setInt(7, durationInMonths);
+            stmt.setString(8, creditType.name());
+            stmt.setString(9, decision.name());
+
+            stmt.executeUpdate();
+            java.sql.ResultSet keys = stmt.getGeneratedKeys();
+
+            if (keys.next()) {
+                Integer creditId = keys.getInt(1);
+
+                Credit credit = new Credit();
+                credit.setId(creditId);
+                credit.setEmployeeId(employeeId);
+                credit.setProfessionalId(professionalId);
+                credit.setCreditDate(creditDate);
+                credit.setRequestedAmount(requestedAmount);
+                credit.setApprovedAmount(approvedAmount);
+                credit.setInterestRate(interestRate);
+                credit.setDurationInMonths(durationInMonths);
+                credit.setCreditType(creditType);
+                credit.setDecision(decision);
+
+                return credit;
+            }
+            throw new RuntimeException("Failed to create credit: no ID returned");
+        });
+    }
 }

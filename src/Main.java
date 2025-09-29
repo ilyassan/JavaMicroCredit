@@ -1,6 +1,7 @@
 import Views.View;
 import Views.EmployeeView;
 import Views.ProfessionalView;
+import Views.CreditView;
 
 public class Main extends View {
 
@@ -24,8 +25,7 @@ public class Main extends View {
                     handleClientManagement();
                     break;
                 case 2:
-                    showWarning("ba9i");
-                    pauseBeforeMenu();
+                    CreditView.showMenu();
                     break;
                 case 3:
                     showWarning("ba9i");
