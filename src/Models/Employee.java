@@ -266,6 +266,31 @@ public class Employee extends Model {
         });
     }
 
+    public static boolean update(Employee employee) {
+        String updateSql = "UPDATE Employee SET firstName = ?, lastName = ?, dateOfBirth = ?, city = ?, investment = ?, placement = ?, childrenCount = ?, familyStatus = ?::FamilyStatus, salary = ?, monthsInWork = ?, position = ?, contractType = ?::ContractType, employmentSector = ?::SectorType, updatedAt = ? WHERE id = ?";
+
+        return withStatement(updateSql, stmt -> {
+            stmt.setString(1, employee.getFirstName());
+            stmt.setString(2, employee.getLastName());
+            stmt.setObject(3, employee.getDateOfBirth());
+            stmt.setString(4, employee.getCity());
+            stmt.setBoolean(5, employee.getInvestment());
+            stmt.setBoolean(6, employee.getPlacement());
+            stmt.setInt(7, employee.getChildrenCount());
+            stmt.setString(8, employee.getFamilyStatus().name());
+            stmt.setDouble(9, employee.getSalary());
+            stmt.setInt(10, employee.getMonthsInWork());
+            stmt.setString(11, employee.getPosition());
+            stmt.setString(12, employee.getContractType().name());
+            stmt.setString(13, employee.getEmploymentSector().name());
+            stmt.setObject(14, employee.getUpdatedAt());
+            stmt.setInt(15, employee.getId());
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        });
+    }
+
     public static Employee create(String firstName, String lastName, LocalDate dateOfBirth, String city,
                                 Boolean investment, Boolean placement, Integer childrenCount, FamilyStatus familyStatus,
                                 Double salary, Integer monthsInWork, String position, ContractType contractType, SectorType employmentSector) {

@@ -132,7 +132,87 @@ public class EmployeeView extends View {
 
     private static void modifyEmployee() {
         showHeader("Modify Employee");
-        showWarning("Ba9i MA DRTHACH");
+
+        try {
+            Employee employee = selectEmployeeById();
+            if (employee == null) {
+                showError("Employee not found.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            showEmployeeDetails(employee);
+            boolean confirm = getYesNo("Do you want to modify this employee?");
+            if (!confirm) {
+                showWarning("Modification cancelled.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            // Personal Information
+            String firstName = getNonEmptyString("Enter first name (" + employee.getFirstName() + "): ");
+            if (firstName.isEmpty()) firstName = employee.getFirstName();
+
+            String lastName = getNonEmptyString("Enter last name (" + employee.getLastName() + "): ");
+            if (lastName.isEmpty()) lastName = employee.getLastName();
+
+            LocalDate dateOfBirth = getDateInRange(
+                    "Enter date of birth (" + employee.getDateOfBirth() + ")",
+                    LocalDate.now().minusYears(70),
+                    LocalDate.now().minusYears(18)
+            );
+
+            String city = getString("Enter city (current: " + (employee.getCity() != null ? employee.getCity() : "None") + ") (optional): ");
+            if (city.isEmpty()) city = employee.getCity();
+
+            // Financial Information
+            boolean investment = getYesNo("Does the employee have investments? (current: " + (employee.getInvestment() ? "Yes" : "No") + ")");
+            boolean placement = getYesNo("Does the employee have placements? (current: " + (employee.getPlacement() ? "Yes" : "No") + ")");
+
+            int childrenCount = getInt("Enter number of children (current: " + employee.getChildrenCount() + "): ", 0, 20);
+
+            // Family Status
+            FamilyStatus familyStatus = getFamilyStatus("Select family status (current: " + employee.getFamilyStatus() + "):");
+
+            // Employment Information
+            double salary = getPositiveDouble("Enter monthly salary (DH) (current: " + employee.getSalary() + "): ");
+            int monthsInWork = getInt("Enter months in current work (current: " + employee.getMonthsInWork() + "): ", 0, 600);
+
+            String position = getString("Enter position (current: " + (employee.getPosition() != null ? employee.getPosition() : "None") + ") (optional): ");
+            if (position.isEmpty()) position = employee.getPosition();
+
+            ContractType contractType = getContractType("Select contract type (current: " + employee.getContractType() + "):");
+            SectorType employmentSector = getSectorType("Select employment sector (current: " + employee.getEmploymentSector() + "):");
+
+            // Update employee
+            employee.setFirstName(firstName);
+            employee.setLastName(lastName);
+            employee.setDateOfBirth(dateOfBirth);
+            employee.setCity(city);
+            employee.setInvestment(investment);
+            employee.setPlacement(placement);
+            employee.setChildrenCount(childrenCount);
+            employee.setFamilyStatus(familyStatus);
+            employee.setSalary(salary);
+            employee.setMonthsInWork(monthsInWork);
+            employee.setPosition(position);
+            employee.setContractType(contractType);
+            employee.setEmploymentSector(employmentSector);
+            employee.setUpdatedAt(java.time.LocalDateTime.now());
+
+            boolean updated = Employee.update(employee);
+
+            if (updated) {
+                showSuccess("Employee updated successfully!");
+                showEmployeeDetails(employee);
+            } else {
+                showError("Failed to update employee. Please try again.");
+            }
+
+        } catch (Exception e) {
+            showError("Error during modification: " + e.getMessage());
+        }
+
         pauseBeforeMenu();
     }
 
