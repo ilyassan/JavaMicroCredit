@@ -224,6 +224,48 @@ public class Employee extends Model {
         });
     }
 
+    public static Employee findById(int employeeId) {
+        String sql = "SELECT * FROM Employee WHERE id = ?";
+
+        return withStatement(sql, stmt -> {
+            stmt.setInt(1, employeeId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Employee(
+                        rs.getInt("id"),
+                        rs.getString("firstName"),
+                        rs.getString("lastName"),
+                        rs.getObject("dateOfBirth", LocalDate.class),
+                        rs.getString("city"),
+                        rs.getBoolean("investment"),
+                        rs.getBoolean("placement"),
+                        rs.getInt("childrenCount"),
+                        FamilyStatus.valueOf(rs.getString("familyStatus")),
+                        rs.getDouble("score"),
+                        rs.getDouble("salary"),
+                        rs.getInt("monthsInWork"),
+                        rs.getString("position"),
+                        ContractType.valueOf(rs.getString("contractType")),
+                        SectorType.valueOf(rs.getString("employmentSector")),
+                        rs.getObject("createdAt", LocalDateTime.class),
+                        rs.getObject("updatedAt", LocalDateTime.class)
+                );
+            }
+            return null;
+        });
+    }
+
+    public static boolean delete(Integer employeeId) {
+        String deleteSql = "DELETE FROM Employee WHERE id = ?";
+
+        return withStatement(deleteSql, stmt -> {
+            stmt.setInt(1, employeeId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        });
+    }
+
     public static Employee create(String firstName, String lastName, LocalDate dateOfBirth, String city,
                                 Boolean investment, Boolean placement, Integer childrenCount, FamilyStatus familyStatus,
                                 Double salary, Integer monthsInWork, String position, ContractType contractType, SectorType employmentSector) {

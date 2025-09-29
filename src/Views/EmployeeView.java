@@ -104,9 +104,29 @@ public class EmployeeView extends View {
         pauseBeforeMenu();
     }
 
+    private static Employee selectEmployeeById() {
+        try {
+            int employeeId = getInt("Enter Employee ID: ", 1, Integer.MAX_VALUE);
+
+            return Employee.findById(employeeId);
+        }
+        catch (Exception e) {
+            showError("Failed to select employee ID: " + e.getMessage());
+            return null;
+        }
+    }
+
     private static void searchEmployeeById() {
         showHeader("Search Employee by ID");
-        showWarning("Ba9i MA DRTHACH");
+
+        Employee employee = selectEmployeeById();
+        if (employee == null) {
+            showError("Employee not found.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        showEmployeeDetails(employee);
         pauseBeforeMenu();
     }
 
@@ -118,7 +138,36 @@ public class EmployeeView extends View {
 
     private static void deleteEmployee() {
         showHeader("Delete Employee");
-        showWarning("Ba9i MA DRTHACH");
+
+        try {
+            Employee employee = selectEmployeeById();
+
+            if (employee == null){
+                showError("Employee not found.");
+                pauseBeforeMenu();
+                return;
+            };
+
+            // Confirm deletion
+            boolean confirm = getYesNo("Are you sure you want to delete this employee?");
+            if (!confirm) {
+                showWarning("Deletion cancelled.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            boolean deleted = Employee.delete(employee.getId());
+
+            if (deleted) {
+                showSuccess("Employee deleted successfully!");
+            } else {
+                showError("Failed to delete employee. Please try again.");
+            }
+
+        } catch (Exception e) {
+            showError("Error during deletion: " + e.getMessage());
+        }
+
         pauseBeforeMenu();
     }
 
