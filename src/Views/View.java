@@ -163,6 +163,44 @@ public abstract class View {
         return getInt("\nEnter your choice: ", 1, options.length);
     }
 
+    public static <T extends Enum<T>> T getEnum(String prompt, Class<T> enumClass) {
+        T[] enumConstants = enumClass.getEnumConstants();
+
+        while (true) {
+            println("\n" + prompt);
+            for (int i = 0; i < enumConstants.length; i++) {
+                println((i + 1) + ". " + enumConstants[i]);
+            }
+
+            int choice = getInt("Select option (1-" + enumConstants.length + "): ", 1, enumConstants.length);
+            return enumConstants[choice - 1];
+        }
+    }
+
+    public static FamilyStatus getFamilyStatus(String prompt) {
+        return getEnum(prompt, FamilyStatus.class);
+    }
+
+    public static ContractType getContractType(String prompt) {
+        return getEnum(prompt, ContractType.class);
+    }
+
+    public static SectorType getSectorType(String prompt) {
+        return getEnum(prompt, SectorType.class);
+    }
+
+    public static CreditType getCreditType(String prompt) {
+        return getEnum(prompt, CreditType.class);
+    }
+
+    public static DecisionEnum getDecisionEnum(String prompt) {
+        return getEnum(prompt, DecisionEnum.class);
+    }
+
+    public static PaymentStatusEnum getPaymentStatusEnum(String prompt) {
+        return getEnum(prompt, PaymentStatusEnum.class);
+    }
+
     public static LocalDate parseDate(String dateStr) {
         try {
             return LocalDate.parse(dateStr, DATE_FORMATTER);

@@ -174,4 +174,52 @@ public class Professional extends Model {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public static Professional create(String firstName, String lastName, LocalDate dateOfBirth, String city,
+                                    Boolean investment, Boolean placement, Integer childrenCount, FamilyStatus familyStatus,
+                                    Double income, String taxRegistrationNumber, SectorType businessSector, String activity) {
+        String insertSql = "INSERT INTO Professional (firstName, lastName, dateOfBirth, city, investment, placement, childrenCount, familyStatus, income, taxRegistrationNumber, businessSector, activity) VALUES (?, ?, ?, ?, ?, ?, ?, ?::FamilyStatus, ?, ?, ?::SectorType, ?)";
+
+        return withStatementReturning(insertSql, stmt -> {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setObject(3, dateOfBirth);
+            stmt.setString(4, city);
+            stmt.setBoolean(5, investment != null ? investment : false);
+            stmt.setBoolean(6, placement != null ? placement : false);
+            stmt.setInt(7, childrenCount != null ? childrenCount : 0);
+            stmt.setString(8, familyStatus.name());
+            stmt.setDouble(9, income);
+            stmt.setString(10, taxRegistrationNumber);
+            stmt.setString(11, businessSector.name());
+            stmt.setString(12, activity);
+
+            stmt.executeUpdate();
+            java.sql.ResultSet keys = stmt.getGeneratedKeys();
+
+            if (keys.next()) {
+                Integer professionalId = keys.getInt(1);
+
+                Professional professional = new Professional();
+                professional.setId(professionalId);
+                professional.setFirstName(firstName);
+                professional.setLastName(lastName);
+                professional.setDateOfBirth(dateOfBirth);
+                professional.setCity(city);
+                professional.setInvestment(investment != null ? investment : false);
+                professional.setPlacement(placement != null ? placement : false);
+                professional.setChildrenCount(childrenCount != null ? childrenCount : 0);
+                professional.setFamilyStatus(familyStatus);
+                professional.setIncome(income);
+                professional.setTaxRegistrationNumber(taxRegistrationNumber);
+                professional.setBusinessSector(businessSector);
+                professional.setActivity(activity);
+                professional.setCreatedAt(LocalDateTime.now());
+                professional.setUpdatedAt(LocalDateTime.now());
+
+                return professional;
+            }
+            throw new RuntimeException("Failed to create professional: no ID returned");
+        });
+    }
 }
