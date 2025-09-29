@@ -221,6 +221,30 @@ public class Professional extends Model {
         });
     }
 
+    public static boolean update(Professional professional) {
+        String updateSql = "UPDATE Professional SET firstName = ?, lastName = ?, dateOfBirth = ?, city = ?, investment = ?, placement = ?, childrenCount = ?, familyStatus = ?::FamilyStatus, income = ?, taxRegistrationNumber = ?, businessSector = ?::SectorType, activity = ?, updatedAt = ? WHERE id = ?";
+
+        return withStatement(updateSql, stmt -> {
+            stmt.setString(1, professional.getFirstName());
+            stmt.setString(2, professional.getLastName());
+            stmt.setObject(3, professional.getDateOfBirth());
+            stmt.setString(4, professional.getCity());
+            stmt.setBoolean(5, professional.getInvestment());
+            stmt.setBoolean(6, professional.getPlacement());
+            stmt.setInt(7, professional.getChildrenCount());
+            stmt.setString(8, professional.getFamilyStatus().name());
+            stmt.setDouble(9, professional.getIncome());
+            stmt.setString(10, professional.getTaxRegistrationNumber());
+            stmt.setString(11, professional.getBusinessSector().name());
+            stmt.setString(12, professional.getActivity());
+            stmt.setObject(13, professional.getUpdatedAt());
+            stmt.setInt(14, professional.getId());
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        });
+    }
+
 
     public static List<Professional> getAll() {
         String sql = "SELECT * FROM Professional";

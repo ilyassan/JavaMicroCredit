@@ -131,7 +131,87 @@ public class ProfessionalView extends View {
 
     private static void modifyProfessional() {
         showHeader("Modify Professional");
-        showWarning("Feature will be implemented in next phase");
+
+        try {
+            Professional professional = selectProfessionalById();
+            if (professional == null) {
+                showError("Professional not found.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            showProfessionalDetails(professional);
+            boolean confirm = getYesNo("Do you want to modify this professional?");
+            if (!confirm) {
+                showWarning("Modification cancelled.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            // Personal Information
+            String firstName = getNonEmptyString("Enter first name (" + professional.getFirstName() + "): ");
+            if (firstName.isEmpty()) firstName = professional.getFirstName();
+
+            String lastName = getNonEmptyString("Enter last name (" + professional.getLastName() + "): ");
+            if (lastName.isEmpty()) lastName = professional.getLastName();
+
+            LocalDate dateOfBirth = getDateInRange(
+                    "Enter date of birth (" + professional.getDateOfBirth() + ")",
+                    LocalDate.now().minusYears(70),
+                    LocalDate.now().minusYears(18)
+            );
+
+            String city = getString("Enter city (current: " + (professional.getCity() != null ? professional.getCity() : "None") + ") (optional): ");
+            if (city.isEmpty()) city = professional.getCity();
+
+            // Financial Information
+            boolean investment = getYesNo("Does the professional have investments? (current: " + (professional.getInvestment() ? "Yes" : "No") + ")");
+            boolean placement = getYesNo("Does the professional have placements? (current: " + (professional.getPlacement() ? "Yes" : "No") + ")");
+
+            int childrenCount = getInt("Enter number of children (current: " + professional.getChildrenCount() + "): ", 0, 20);
+
+            // Family Status
+            FamilyStatus familyStatus = getFamilyStatus("Select family status (current: " + professional.getFamilyStatus() + "):");
+
+            // Professional Information
+            double income = getPositiveDouble("Enter monthly income (DH) (current: " + professional.getIncome() + "): ");
+
+            String taxRegistrationNumber = getNonEmptyString("Enter tax registration number (" + professional.getTaxRegistrationNumber() + "): ");
+            if (taxRegistrationNumber.isEmpty()) taxRegistrationNumber = professional.getTaxRegistrationNumber();
+
+            SectorType businessSector = getSectorType("Select business sector (current: " + professional.getBusinessSector() + "):");
+
+            String activity = getString("Enter activity/profession (current: " + (professional.getActivity() != null ? professional.getActivity() : "None") + ") (optional): ");
+            if (activity.isEmpty()) activity = professional.getActivity();
+
+            // Update professional
+            professional.setFirstName(firstName);
+            professional.setLastName(lastName);
+            professional.setDateOfBirth(dateOfBirth);
+            professional.setCity(city);
+            professional.setInvestment(investment);
+            professional.setPlacement(placement);
+            professional.setChildrenCount(childrenCount);
+            professional.setFamilyStatus(familyStatus);
+            professional.setIncome(income);
+            professional.setTaxRegistrationNumber(taxRegistrationNumber);
+            professional.setBusinessSector(businessSector);
+            professional.setActivity(activity);
+            professional.setUpdatedAt(java.time.LocalDateTime.now());
+
+            boolean updated = Professional.update(professional);
+
+            if (updated) {
+                showSuccess("Professional updated successfully!");
+                showProfessionalDetails(professional);
+            } else {
+                showError("Failed to update professional. Please try again.");
+            }
+
+        } catch (Exception e) {
+            showError("Error during modification: " + e.getMessage());
+        }
+
         pauseBeforeMenu();
     }
 
