@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS Installement CASCADE;
 DROP TABLE IF EXISTS Credit CASCADE;
 DROP TABLE IF EXISTS Professional CASCADE;
 DROP TABLE IF EXISTS Employee CASCADE;
-DROP TABLE IF EXISTS Person CASCADE;
 
 DROP TYPE IF EXISTS FamilyStatus CASCADE;
 DROP TYPE IF EXISTS ContractType CASCADE;
@@ -41,8 +40,8 @@ CREATE TYPE PaymentStatusEnum AS ENUM ('ON_TIME', 'LATE', 'PAID_LATE', 'UNPAID_U
 -- TABLES
 -- ======================================================
 
--- Person Table
-CREATE TABLE Person (
+-- Employee Table
+CREATE TABLE Employee (
     id              SERIAL PRIMARY KEY,
     firstName       VARCHAR(100) NOT NULL,
     lastName        VARCHAR(100) NOT NULL,
@@ -53,14 +52,40 @@ CREATE TABLE Person (
     childrenCount   INT DEFAULT 0,
     familyStatus    FamilyStatus NOT NULL,
     score           DOUBLE PRECISION,
+    salary          DOUBLE PRECISION NOT NULL,
+    monthsInWork    INT NOT NULL,
+    position        VARCHAR(100),
+    contractType    ContractType NOT NULL,
+    employmentSector SectorType NOT NULL,
     createdAt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Professional Table
+CREATE TABLE Professional (
+    id                      SERIAL PRIMARY KEY,
+    firstName               VARCHAR(100) NOT NULL,
+    lastName                VARCHAR(100) NOT NULL,
+    dateOfBirth             DATE NOT NULL,
+    city                    VARCHAR(100),
+    investment              BOOLEAN DEFAULT FALSE,
+    placement               BOOLEAN DEFAULT FALSE,
+    childrenCount           INT DEFAULT 0,
+    familyStatus            FamilyStatus NOT NULL,
+    score                   DOUBLE PRECISION,
+    income                  DOUBLE PRECISION NOT NULL,
+    taxRegistrationNumber   VARCHAR(50) UNIQUE NOT NULL,
+    businessSector          SectorType NOT NULL,
+    activity                VARCHAR(255),
+    createdAt               TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Credit Table
 CREATE TABLE Credit (
     id                  SERIAL PRIMARY KEY,
-    personId            INT NOT NULL,
+    employeeId          INT,
+    professionalId      INT,
     creditDate          DATE NOT NULL,
     requestedAmount     DOUBLE PRECISION NOT NULL,
     approvedAmount      DOUBLE PRECISION,
@@ -68,7 +93,9 @@ CREATE TABLE Credit (
     durationInMonths    INT,
     creditType          CreditType NOT NULL,
     decision            DecisionEnum NOT NULL,
-    FOREIGN KEY (personId) REFERENCES Person(id) ON DELETE CASCADE
+    FOREIGN KEY (employeeId) REFERENCES Employee(id) ON DELETE CASCADE,
+    FOREIGN KEY (professionalId) REFERENCES Professional(id) ON DELETE CASCADE,
+    CHECK ((employeeId IS NOT NULL AND professionalId IS NULL) OR (employeeId IS NULL AND professionalId IS NOT NULL))
 );
 
 -- Installement Table
@@ -87,25 +114,4 @@ CREATE TABLE PaymentRecord (
     status          PaymentStatusEnum NOT NULL,
     createdAt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (installementId) REFERENCES Installement(id) ON DELETE CASCADE
-);
-
--- Employee Table (Subtype of Person)
-CREATE TABLE Employee (
-      personId        INT PRIMARY KEY,
-      salary          DOUBLE PRECISION NOT NULL,
-      monthsInWork    INT NOT NULL,
-      position        VARCHAR(100),
-      contractType    ContractType NOT NULL,
-      employmentSector SectorType NOT NULL,
-      FOREIGN KEY (personId) REFERENCES Person(id) ON DELETE CASCADE
-);
-
--- Professional Table (Subtype of Person)
-CREATE TABLE Professional (
-    personId                INT PRIMARY KEY,
-    income                  DOUBLE PRECISION NOT NULL,
-    taxRegistrationNumber   VARCHAR(50) UNIQUE NOT NULL,
-    businessSector          SectorType NOT NULL,
-    activity                VARCHAR(255),
-    FOREIGN KEY (personId) REFERENCES Person(id) ON DELETE CASCADE
 );
