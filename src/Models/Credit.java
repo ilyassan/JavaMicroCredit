@@ -224,4 +224,31 @@ public class Credit extends Model {
             return rowsAffected > 0;
         });
     }
+
+    public static java.util.List<Credit> getCreditsByClientId(Integer employeeId, Integer professionalId) {
+        String sql = "SELECT * FROM Credit WHERE (employeeId = ? OR professionalId = ?) ORDER BY creditDate DESC";
+
+        return withStatement(sql, stmt -> {
+            stmt.setObject(1, employeeId);
+            stmt.setObject(2, professionalId);
+            java.sql.ResultSet rs = stmt.executeQuery();
+            java.util.List<Credit> credits = new java.util.ArrayList<>();
+
+            while (rs.next()) {
+                credits.add(new Credit(
+                    rs.getInt("id"),
+                    rs.getObject("employeeId", Integer.class),
+                    rs.getObject("professionalId", Integer.class),
+                    rs.getObject("creditDate", LocalDate.class),
+                    rs.getDouble("requestedAmount"),
+                    rs.getDouble("approvedAmount"),
+                    rs.getDouble("interestRate"),
+                    rs.getInt("durationInMonths"),
+                    CreditType.valueOf(rs.getString("creditType")),
+                    DecisionEnum.valueOf(rs.getString("decision"))
+                ));
+            }
+            return credits;
+        });
+    }
 }

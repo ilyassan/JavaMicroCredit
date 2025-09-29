@@ -74,4 +74,23 @@ public class PaymentRecord extends Model {
             throw new RuntimeException("Failed to create payment record: no ID returned");
         });
     }
+
+    public static PaymentRecord getLatestByInstallementId(Integer installementId) {
+        String sql = "SELECT * FROM PaymentRecord WHERE installementId = ? ORDER BY createdAt DESC LIMIT 1";
+
+        return withStatement(sql, stmt -> {
+            stmt.setInt(1, installementId);
+            java.sql.ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new PaymentRecord(
+                    rs.getInt("id"),
+                    rs.getInt("installementId"),
+                    PaymentStatusEnum.valueOf(rs.getString("status")),
+                    rs.getObject("createdAt", LocalDateTime.class)
+                );
+            }
+            return null;
+        });
+    }
 }

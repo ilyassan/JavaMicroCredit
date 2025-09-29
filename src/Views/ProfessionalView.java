@@ -4,6 +4,7 @@ import Models.Employee;
 import Models.Professional;
 import Models.Installement;
 import Models.PaymentRecord;
+import Models.Credit;
 import Enums.FamilyStatus;
 import Enums.SectorType;
 import Services.PaymentService;
@@ -20,6 +21,7 @@ public class ProfessionalView extends View {
                     "Modify Professional",
                     "Delete Professional",
                     "List All Professionals",
+                    "View Professional Credits",
                     "Pay Installement",
                     "Back to Client Management"
             };
@@ -43,9 +45,12 @@ public class ProfessionalView extends View {
                     listAllProfessionals();
                     break;
                 case 6:
-                    payInstallement();
+                    viewProfessionalCredits();
                     break;
                 case 7:
+                    payInstallement();
+                    break;
+                case 8:
                     return;
                 default:
                     showError("Invalid choice. Please try again.");
@@ -303,27 +308,72 @@ public class ProfessionalView extends View {
             return;
         }
 
-        List<Installement> installements = Installement.getInstallementsByClientId(null, professionalId);
+        List<Credit> credits = Credit.getCreditsByClientId(null, professionalId);
 
-        if (installements.isEmpty()) {
-            showInfo("No installements found for this professional.");
+        if (credits.isEmpty()) {
+            showInfo("No credits found for this professional.");
             pauseBeforeMenu();
             return;
         }
 
         println("Professional: " + professional.getFirstName() + " " + professional.getLastName());
-        println("\nInstallements:\n");
+        println("\nCredits:\n");
 
+        for (int i = 0; i < credits.size(); i++) {
+            Credit credit = credits.get(i);
+            println((i + 1) + ". Credit ID: " + credit.getId() +
+                   " | Type: " + credit.getCreditType() +
+                   " | Amount: " + credit.getApprovedAmount() + " DH" +
+                   " | Status: " + credit.getDecision());
+        }
+
+        println("");
+        int creditIndex = getInt("Enter credit number (1-" + credits.size() + "): ", 1, credits.size());
+        Credit selectedCredit = credits.get(creditIndex - 1);
+
+        List<Installement> installements = Installement.getInstallementsByCreditId(selectedCredit.getId());
+
+        if (installements.isEmpty()) {
+            showInfo("No installements due for this credit yet.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        println("\nInstallements for Credit ID " + selectedCredit.getId() + ":\n");
+
+        List<Installement> unpaidInstallements = new java.util.ArrayList<>();
         for (int i = 0; i < installements.size(); i++) {
             Installement inst = installements.get(i);
+            PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(inst.getId());
+
+            String paymentStatus = lastPayment != null ? lastPayment.getStatus().toString() : "NOT PAID";
+
             println((i + 1) + ". Installement ID: " + inst.getId() +
                    " | Due Date: " + inst.getDueDate() +
-                   " | Amount: " + inst.getAmount() + " DH");
+                   " | Amount: " + inst.getAmount() + " DH" +
+                   " | Status: " + paymentStatus);
+
+            if (lastPayment == null) {
+                unpaidInstallements.add(inst);
+            }
+        }
+
+        if (unpaidInstallements.isEmpty()) {
+            showInfo("All due installements have been paid.");
+            pauseBeforeMenu();
+            return;
         }
 
         println("");
         int installementIndex = getInt("Enter installement number to pay (1-" + installements.size() + "): ", 1, installements.size());
         Installement selectedInstallement = installements.get(installementIndex - 1);
+
+        PaymentRecord existingPayment = PaymentRecord.getLatestByInstallementId(selectedInstallement.getId());
+        if (existingPayment != null) {
+            showError("This installement has already been paid.");
+            pauseBeforeMenu();
+            return;
+        }
 
         if (getYesNo("Confirm payment of " + selectedInstallement.getAmount() + " DH for installement due on " + selectedInstallement.getDueDate() + "?")) {
             try {
@@ -336,6 +386,47 @@ public class ProfessionalView extends View {
             }
         } else {
             println("Payment cancelled.");
+        }
+
+        pauseBeforeMenu();
+    }
+
+    private static void viewProfessionalCredits() {
+        showHeader("View Professional Credits");
+
+        int professionalId = getInt("Enter Professional ID: ", 1, Integer.MAX_VALUE);
+        Professional professional = Professional.findById(professionalId);
+
+        if (professional == null) {
+            showError("Professional not found with ID: " + professionalId);
+            pauseBeforeMenu();
+            return;
+        }
+
+        List<Credit> credits = Credit.getCreditsByClientId(null, professionalId);
+
+        if (credits.isEmpty()) {
+            showInfo("No credits found for this professional.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        println("Professional: " + professional.getFirstName() + " " + professional.getLastName());
+        println("Total Credits: " + credits.size());
+        println("");
+
+        for (int i = 0; i < credits.size(); i++) {
+            Credit credit = credits.get(i);
+            println("--- Credit #" + (i + 1) + " ---");
+            println("Credit ID: " + credit.getId());
+            println("Credit Type: " + credit.getCreditType());
+            println("Credit Date: " + credit.getCreditDate());
+            println("Requested Amount: " + credit.getRequestedAmount() + " DH");
+            println("Approved Amount: " + credit.getApprovedAmount() + " DH");
+            println("Interest Rate: " + credit.getInterestRate() + "%");
+            println("Duration: " + credit.getDurationInMonths() + " months");
+            println("Decision: " + credit.getDecision());
+            println("");
         }
 
         pauseBeforeMenu();

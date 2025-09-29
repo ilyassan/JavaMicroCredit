@@ -145,4 +145,25 @@ public class Installement extends Model {
             return null;
         });
     }
+
+    public static List<Installement> getInstallementsByCreditId(Integer creditId) {
+        String sql = "SELECT * FROM Installement WHERE creditId = ? AND dueDate <= ? ORDER BY dueDate ASC";
+
+        return withStatement(sql, stmt -> {
+            stmt.setInt(1, creditId);
+            stmt.setObject(2, LocalDate.now());
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<Installement> installements = new ArrayList<>();
+
+            while (rs.next()) {
+                installements.add(new Installement(
+                    rs.getInt("id"),
+                    rs.getInt("creditId"),
+                    rs.getObject("dueDate", LocalDate.class),
+                    rs.getDouble("amount")
+                ));
+            }
+            return installements;
+        });
+    }
 }
