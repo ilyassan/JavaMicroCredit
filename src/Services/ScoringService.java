@@ -3,10 +3,13 @@ package Services;
 import Models.Employee;
 import Models.Professional;
 import Models.Person;
+import Models.PaymentRecord;
 import Enums.ContractType;
 import Enums.SectorType;
+import Enums.PaymentStatusEnum;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 public class ScoringService {
 
@@ -83,7 +86,64 @@ public class ScoringService {
     }
 
     private static double calculateHistory(Person person) {
-        return 0;
+        double score = 0;
+
+        Integer employeeId = null;
+        Integer professionalId = null;
+
+        if (person instanceof Employee) {
+            employeeId = ((Employee) person).getId();
+        } else if (person instanceof Professional) {
+            professionalId = ((Professional) person).getId();
+        }
+
+        List<PaymentRecord> paymentRecords = PaymentRecord.getPaymentRecordsByClientId(employeeId, professionalId);
+
+        if (paymentRecords.isEmpty()) {
+            return 0;
+        }
+
+        int unpaidUnsettledCount = 0;
+        int unpaidSettledCount = 0;
+        int paidLateCount = 0;
+        int onTimeCount = 0;
+
+        for (PaymentRecord record : paymentRecords) {
+            PaymentStatusEnum status = record.getStatus();
+
+            switch (status) {
+                case UNPAID_UNSETTLED:
+                    unpaidUnsettledCount++;
+                    break;
+                case UNPAID_SETTLED:
+                    unpaidSettledCount++;
+                    break;
+                case PAID_LATE:
+                    paidLateCount++;
+                    break;
+                case ON_TIME:
+                    onTimeCount++;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        score -= unpaidUnsettledCount * 10;
+
+        score += unpaidSettledCount * 5;
+
+        if (paidLateCount >= 1 && paidLateCount <= 3) {
+            score -= 3;
+        } else if (paidLateCount >= 4) {
+            score -= 5;
+        }
+
+        if (paymentRecords.size() > 0 && unpaidUnsettledCount == 0 && paidLateCount == 0) {
+            score += 10;
+        }
+
+        return score;
     }
 
     private static double calculateClientRelationship(Person person) {

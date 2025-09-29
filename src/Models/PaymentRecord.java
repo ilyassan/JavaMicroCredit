@@ -93,4 +93,29 @@ public class PaymentRecord extends Model {
             return null;
         });
     }
+
+    public static java.util.List<PaymentRecord> getPaymentRecordsByClientId(Integer employeeId, Integer professionalId) {
+        String sql = "SELECT pr.* FROM PaymentRecord pr " +
+                    "INNER JOIN Installement i ON pr.installementId = i.id " +
+                    "INNER JOIN Credit c ON i.creditId = c.id " +
+                    "WHERE (c.employeeId = ? OR c.professionalId = ?) " +
+                    "ORDER BY pr.createdAt DESC";
+
+        return withStatement(sql, stmt -> {
+            stmt.setObject(1, employeeId);
+            stmt.setObject(2, professionalId);
+            java.sql.ResultSet rs = stmt.executeQuery();
+            java.util.List<PaymentRecord> records = new java.util.ArrayList<>();
+
+            while (rs.next()) {
+                records.add(new PaymentRecord(
+                    rs.getInt("id"),
+                    rs.getInt("installementId"),
+                    PaymentStatusEnum.valueOf(rs.getString("status")),
+                    rs.getObject("createdAt", LocalDateTime.class)
+                ));
+            }
+            return records;
+        });
+    }
 }

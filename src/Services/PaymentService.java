@@ -3,6 +3,10 @@ package Services;
 import Enums.PaymentStatusEnum;
 import Models.Installement;
 import Models.PaymentRecord;
+import Models.Credit;
+import Models.Employee;
+import Models.Professional;
+import Models.Person;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -20,7 +24,30 @@ public class PaymentService {
 
         PaymentStatusEnum status = determinePaymentStatus(dueDate, today);
 
-        return PaymentRecord.create(installementId, status);
+        PaymentRecord paymentRecord = PaymentRecord.create(installementId, status);
+
+        Credit credit = Credit.findById(installement.getCreditId());
+        if (credit != null) {
+            Person person = null;
+            if (credit.getEmployeeId() != null) {
+                person = Employee.findById(credit.getEmployeeId());
+            } else if (credit.getProfessionalId() != null) {
+                person = Professional.findById(credit.getProfessionalId());
+            }
+
+            if (person != null) {
+                double newScore = ScoringService.calculateScore(person);
+                person.setScore(newScore);
+
+                if (person instanceof Employee) {
+                    Employee.update((Employee) person);
+                } else if (person instanceof Professional) {
+                    Professional.update((Professional) person);
+                }
+            }
+        }
+
+        return paymentRecord;
     }
 
     public static PaymentStatusEnum determinePaymentStatus(LocalDate dueDate, LocalDate paymentDate) {
