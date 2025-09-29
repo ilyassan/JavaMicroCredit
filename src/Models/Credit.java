@@ -160,4 +160,68 @@ public class Credit extends Model {
             throw new RuntimeException("Failed to create credit: no ID returned");
         });
     }
+
+    public static java.util.List<Credit> findByDecision(DecisionEnum decision) {
+        String sql = "SELECT * FROM Credit WHERE decision = ?::DecisionEnum";
+
+        return withStatement(sql, stmt -> {
+            stmt.setString(1, decision.name());
+            java.sql.ResultSet rs = stmt.executeQuery();
+            java.util.List<Credit> credits = new java.util.ArrayList<>();
+
+            while (rs.next()) {
+                credits.add(new Credit(
+                    rs.getInt("id"),
+                    rs.getObject("employeeId", Integer.class),
+                    rs.getObject("professionalId", Integer.class),
+                    rs.getObject("creditDate", LocalDate.class),
+                    rs.getDouble("requestedAmount"),
+                    rs.getDouble("approvedAmount"),
+                    rs.getDouble("interestRate"),
+                    rs.getInt("durationInMonths"),
+                    CreditType.valueOf(rs.getString("creditType")),
+                    DecisionEnum.valueOf(rs.getString("decision"))
+                ));
+            }
+            return credits;
+        });
+    }
+
+    public static Credit findById(Integer creditId) {
+        String sql = "SELECT * FROM Credit WHERE id = ?";
+
+        return withStatement(sql, stmt -> {
+            stmt.setInt(1, creditId);
+            java.sql.ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Credit(
+                    rs.getInt("id"),
+                    rs.getObject("employeeId", Integer.class),
+                    rs.getObject("professionalId", Integer.class),
+                    rs.getObject("creditDate", LocalDate.class),
+                    rs.getDouble("requestedAmount"),
+                    rs.getDouble("approvedAmount"),
+                    rs.getDouble("interestRate"),
+                    rs.getInt("durationInMonths"),
+                    CreditType.valueOf(rs.getString("creditType")),
+                    DecisionEnum.valueOf(rs.getString("decision"))
+                );
+            }
+            return null;
+        });
+    }
+
+    public static boolean updateDecisionAndAmount(Integer creditId, DecisionEnum decision, Double approvedAmount) {
+        String sql = "UPDATE Credit SET decision = ?::DecisionEnum, approvedAmount = ? WHERE id = ?";
+
+        return withStatement(sql, stmt -> {
+            stmt.setString(1, decision.name());
+            stmt.setDouble(2, approvedAmount);
+            stmt.setInt(3, creditId);
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        });
+    }
 }

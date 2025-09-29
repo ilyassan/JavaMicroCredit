@@ -1,10 +1,13 @@
 package Views;
 
 import Enums.CreditType;
+import Enums.DecisionEnum;
 import Models.Credit;
 import Models.Employee;
 import Models.Professional;
+import Models.Installement;
 import Services.CreditService;
+import java.util.List;
 
 public class CreditView extends View {
 
@@ -12,8 +15,8 @@ public class CreditView extends View {
         while (true) {
             String[] creditMenuOptions = {
                     "Create Credit Request",
+                    "Review Pending Credits",
                     "View Credit Details",
-                    "List All Credits",
                     "Back to Main Menu"
             };
 
@@ -24,8 +27,7 @@ public class CreditView extends View {
                     createCreditRequest();
                     break;
                 case 2:
-                    showWarning("Coming soon...");
-                    pauseBeforeMenu();
+                    reviewPendingCredits();
                     break;
                 case 3:
                     showWarning("Coming soon...");
@@ -131,6 +133,115 @@ public class CreditView extends View {
             e.printStackTrace();
             pauseBeforeMenu();
         }
+    }
+
+    private static void reviewPendingCredits() {
+        showHeader("Credits Pending Manual Review");
+
+        List<Credit> pendingCredits = Credit.findByDecision(DecisionEnum.MANUAL_REVIEW);
+
+        if (pendingCredits.isEmpty()) {
+            showInfo("No credits pending manual review.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        println("Found " + pendingCredits.size() + " credit(s) pending review:\n");
+
+        for (int i = 0; i < pendingCredits.size(); i++) {
+            Credit credit = pendingCredits.get(i);
+            println("--- Credit #" + (i + 1) + " ---");
+            println("Credit ID: " + credit.getId());
+            println("Credit Type: " + credit.getCreditType());
+            println("Credit Date: " + credit.getCreditDate());
+            println("Requested Amount: " + credit.getRequestedAmount() + " DH");
+            println("Interest Rate: " + credit.getInterestRate() + "%");
+            println("Duration: " + credit.getDurationInMonths() + " months");
+
+            if (credit.getEmployeeId() != null) {
+                Employee employee = Employee.findById(credit.getEmployeeId());
+                if (employee != null) {
+                    println("Client: " + employee.getFirstName() + " " + employee.getLastName() + " (Employee)");
+                    println("Salary: " + employee.getSalary() + " DH");
+                    println("Score: " + employee.getScore());
+                }
+            } else if (credit.getProfessionalId() != null) {
+                Professional professional = Professional.findById(credit.getProfessionalId());
+                if (professional != null) {
+                    println("Client: " + professional.getFirstName() + " " + professional.getLastName() + " (Professional)");
+                    println("Income: " + professional.getIncome() + " DH");
+                    println("Score: " + professional.getScore());
+                }
+            }
+            println("");
+        }
+
+        if (getYesNo("Do you want to review a credit?")) {
+            int creditIndex = getInt("Enter credit number to review (1-" + pendingCredits.size() + "): ", 1, pendingCredits.size());
+            reviewSingleCredit(pendingCredits.get(creditIndex - 1));
+        }
+    }
+
+    private static void reviewSingleCredit(Credit credit) {
+        showHeader("Review Credit ID: " + credit.getId());
+
+        println("Requested Amount: " + credit.getRequestedAmount() + " DH");
+        println("Interest Rate: " + credit.getInterestRate() + "%");
+        println("Duration: " + credit.getDurationInMonths() + " months");
+        println("");
+
+        String[] reviewOptions = {
+                "Approve with requested amount",
+                "Approve with different amount",
+                "Reject",
+                "Cancel"
+        };
+
+        int choice = showMenuAndGetChoice("Review Decision", reviewOptions);
+
+        DecisionEnum newDecision;
+        Double approvedAmount;
+
+        switch (choice) {
+            case 1:
+                newDecision = DecisionEnum.IMMEDIATE_APPROVAL;
+                approvedAmount = credit.getRequestedAmount();
+                break;
+            case 2:
+                approvedAmount = getPositiveDouble("Enter approved amount (DH): ");
+                newDecision = DecisionEnum.IMMEDIATE_APPROVAL;
+                break;
+            case 3:
+                newDecision = DecisionEnum.AUTOMATIC_REJECTION;
+                approvedAmount = 0.0;
+                break;
+            case 4:
+                return;
+            default:
+                showError("Invalid choice.");
+                return;
+        }
+
+        boolean updated = Credit.updateDecisionAndAmount(credit.getId(), newDecision, approvedAmount);
+
+        if (updated) {
+            if (newDecision == DecisionEnum.IMMEDIATE_APPROVAL) {
+                credit.setDecision(newDecision);
+                credit.setApprovedAmount(approvedAmount);
+                List<Installement> installements = Installement.generateInstallements(credit);
+                showSuccess("Credit approved! " + installements.size() + " installments generated.");
+            } else {
+                showSuccess("Credit rejected.");
+            }
+        } else {
+            showError("Failed to update credit decision.");
+        }
+
+        pauseBeforeMenu();
+    }
+
+    private static void showInfo(String message) {
+        println("INFO: " + message);
     }
 
 }
