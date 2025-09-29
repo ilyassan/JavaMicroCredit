@@ -102,4 +102,47 @@ public class Installement extends Model {
 
         return installements;
     }
+
+    public static List<Installement> getInstallementsByClientId(Integer employeeId, Integer professionalId) {
+        String sql = "SELECT i.* FROM Installement i " +
+                    "INNER JOIN Credit c ON i.creditId = c.id " +
+                    "WHERE (c.employeeId = ? OR c.professionalId = ?) " +
+                    "ORDER BY i.dueDate ASC";
+
+        return withStatement(sql, stmt -> {
+            stmt.setObject(1, employeeId);
+            stmt.setObject(2, professionalId);
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<Installement> installements = new ArrayList<>();
+
+            while (rs.next()) {
+                installements.add(new Installement(
+                    rs.getInt("id"),
+                    rs.getInt("creditId"),
+                    rs.getObject("dueDate", LocalDate.class),
+                    rs.getDouble("amount")
+                ));
+            }
+            return installements;
+        });
+    }
+
+    public static Installement findById(Integer installementId) {
+        String sql = "SELECT * FROM Installement WHERE id = ?";
+
+        return withStatement(sql, stmt -> {
+            stmt.setInt(1, installementId);
+            java.sql.ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Installement(
+                    rs.getInt("id"),
+                    rs.getInt("creditId"),
+                    rs.getObject("dueDate", LocalDate.class),
+                    rs.getDouble("amount")
+                );
+            }
+            return null;
+        });
+    }
 }

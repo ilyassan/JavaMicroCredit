@@ -49,4 +49,29 @@ public class PaymentRecord extends Model {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public static PaymentRecord create(Integer installementId, PaymentStatusEnum status) {
+        String insertSql = "INSERT INTO PaymentRecord (installementId, status) VALUES (?, ?::PaymentStatusEnum)";
+
+        return withStatementReturning(insertSql, stmt -> {
+            stmt.setInt(1, installementId);
+            stmt.setString(2, status.name());
+
+            stmt.executeUpdate();
+            java.sql.ResultSet keys = stmt.getGeneratedKeys();
+
+            if (keys.next()) {
+                Integer paymentRecordId = keys.getInt(1);
+
+                PaymentRecord paymentRecord = new PaymentRecord();
+                paymentRecord.setId(paymentRecordId);
+                paymentRecord.setInstallementId(installementId);
+                paymentRecord.setStatus(status);
+                paymentRecord.setCreatedAt(LocalDateTime.now());
+
+                return paymentRecord;
+            }
+            throw new RuntimeException("Failed to create payment record: no ID returned");
+        });
+    }
 }

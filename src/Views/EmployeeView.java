@@ -1,9 +1,12 @@
 package Views;
 
 import Models.Employee;
+import Models.Installement;
+import Models.PaymentRecord;
 import Enums.ContractType;
 import Enums.FamilyStatus;
 import Enums.SectorType;
+import Services.PaymentService;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +21,7 @@ public class EmployeeView extends View {
                     "Modify Employee",
                     "Delete Employee",
                     "List All Employees",
+                    "Pay Installement",
                     "Back to Client Management"
             };
 
@@ -40,6 +44,9 @@ public class EmployeeView extends View {
                     listAllEmployees();
                     break;
                 case 6:
+                    payInstallement();
+                    break;
+                case 7:
                     return;
                 default:
                     showError("Invalid choice. Please try again.");
@@ -283,5 +290,59 @@ public class EmployeeView extends View {
         println("Employment Sector: " + employee.getEmploymentSector());
         println("Created At: " + employee.getCreatedAt());
         showSeparator();
+    }
+
+    private static void payInstallement() {
+        showHeader("Pay Installement");
+
+        int employeeId = getInt("Enter Employee ID: ", 1, Integer.MAX_VALUE);
+        Employee employee = Employee.findById(employeeId);
+
+        if (employee == null) {
+            showError("Employee not found with ID: " + employeeId);
+            pauseBeforeMenu();
+            return;
+        }
+
+        List<Installement> installements = Installement.getInstallementsByClientId(employeeId, null);
+
+        if (installements.isEmpty()) {
+            showInfo("No installements found for this employee.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        println("Employee: " + employee.getFirstName() + " " + employee.getLastName());
+        println("\nInstallements:\n");
+
+        for (int i = 0; i < installements.size(); i++) {
+            Installement inst = installements.get(i);
+            println((i + 1) + ". Installement ID: " + inst.getId() +
+                   " | Due Date: " + inst.getDueDate() +
+                   " | Amount: " + inst.getAmount() + " DH");
+        }
+
+        println("");
+        int installementIndex = getInt("Enter installement number to pay (1-" + installements.size() + "): ", 1, installements.size());
+        Installement selectedInstallement = installements.get(installementIndex - 1);
+
+        if (getYesNo("Confirm payment of " + selectedInstallement.getAmount() + " DH for installement due on " + selectedInstallement.getDueDate() + "?")) {
+            try {
+                PaymentRecord payment = PaymentService.recordPayment(selectedInstallement.getId());
+                showSuccess("Payment recorded successfully!");
+                println("Payment Status: " + payment.getStatus());
+                println("Payment Date: " + payment.getCreatedAt());
+            } catch (Exception e) {
+                showError("Error recording payment: " + e.getMessage());
+            }
+        } else {
+            println("Payment cancelled.");
+        }
+
+        pauseBeforeMenu();
+    }
+
+    private static void showInfo(String message) {
+        println("INFO: " + message);
     }
 }

@@ -2,8 +2,11 @@ package Views;
 
 import Models.Employee;
 import Models.Professional;
+import Models.Installement;
+import Models.PaymentRecord;
 import Enums.FamilyStatus;
 import Enums.SectorType;
+import Services.PaymentService;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,6 +20,7 @@ public class ProfessionalView extends View {
                     "Modify Professional",
                     "Delete Professional",
                     "List All Professionals",
+                    "Pay Installement",
                     "Back to Client Management"
             };
 
@@ -39,6 +43,9 @@ public class ProfessionalView extends View {
                     listAllProfessionals();
                     break;
                 case 6:
+                    payInstallement();
+                    break;
+                case 7:
                     return;
                 default:
                     showError("Invalid choice. Please try again.");
@@ -282,5 +289,59 @@ public class ProfessionalView extends View {
         }
         println("Created At: " + professional.getCreatedAt());
         showSeparator();
+    }
+
+    private static void payInstallement() {
+        showHeader("Pay Installement");
+
+        int professionalId = getInt("Enter Professional ID: ", 1, Integer.MAX_VALUE);
+        Professional professional = Professional.findById(professionalId);
+
+        if (professional == null) {
+            showError("Professional not found with ID: " + professionalId);
+            pauseBeforeMenu();
+            return;
+        }
+
+        List<Installement> installements = Installement.getInstallementsByClientId(null, professionalId);
+
+        if (installements.isEmpty()) {
+            showInfo("No installements found for this professional.");
+            pauseBeforeMenu();
+            return;
+        }
+
+        println("Professional: " + professional.getFirstName() + " " + professional.getLastName());
+        println("\nInstallements:\n");
+
+        for (int i = 0; i < installements.size(); i++) {
+            Installement inst = installements.get(i);
+            println((i + 1) + ". Installement ID: " + inst.getId() +
+                   " | Due Date: " + inst.getDueDate() +
+                   " | Amount: " + inst.getAmount() + " DH");
+        }
+
+        println("");
+        int installementIndex = getInt("Enter installement number to pay (1-" + installements.size() + "): ", 1, installements.size());
+        Installement selectedInstallement = installements.get(installementIndex - 1);
+
+        if (getYesNo("Confirm payment of " + selectedInstallement.getAmount() + " DH for installement due on " + selectedInstallement.getDueDate() + "?")) {
+            try {
+                PaymentRecord payment = PaymentService.recordPayment(selectedInstallement.getId());
+                showSuccess("Payment recorded successfully!");
+                println("Payment Status: " + payment.getStatus());
+                println("Payment Date: " + payment.getCreatedAt());
+            } catch (Exception e) {
+                showError("Error recording payment: " + e.getMessage());
+            }
+        } else {
+            println("Payment cancelled.");
+        }
+
+        pauseBeforeMenu();
+    }
+
+    private static void showInfo(String message) {
+        println("INFO: " + message);
     }
 }
