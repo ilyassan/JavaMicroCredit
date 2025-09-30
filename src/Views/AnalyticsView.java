@@ -4,8 +4,8 @@ import Models.Person;
 import Models.Employee;
 import Models.Professional;
 import Services.AnalyticsService;
-import Services.ScoreRecalculationService;
 import java.util.List;
+import java.util.Map;
 
 public class AnalyticsView extends View {
 
@@ -14,10 +14,8 @@ public class AnalyticsView extends View {
             String[] analyticsMenuOptions = {
                     "Sort Clients",
                     "Search Mortgage Eligible Clients",
-                    "At-Risk Clients Report",
+                    "At-Risk Clients Report (Top 10)",
                     "Employment Type Distribution",
-                    "Marketing Campaign Targeting",
-                    "Recalculate All Scores (Utility)",
                     "Back to Main Menu"
             };
 
@@ -28,25 +26,15 @@ public class AnalyticsView extends View {
                     sortClients();
                     break;
                 case 2:
-                    showWarning("Coming soon...");
-                    pauseBeforeMenu();
+                    searchMortgageEligibleClients();
                     break;
                 case 3:
-                    showWarning("Coming soon...");
-                    pauseBeforeMenu();
+                    showAtRiskClients();
                     break;
                 case 4:
-                    showWarning("Coming soon...");
-                    pauseBeforeMenu();
+                    showEmploymentTypeDistribution();
                     break;
                 case 5:
-                    showWarning("Coming soon...");
-                    pauseBeforeMenu();
-                    break;
-                case 6:
-                    recalculateAllScores();
-                    break;
-                case 7:
                     return;
                 default:
                     showError("Invalid choice. Please try again.");
@@ -132,26 +120,106 @@ public class AnalyticsView extends View {
         pauseBeforeMenu();
     }
 
-    private static void recalculateAllScores() {
-        showHeader("Recalculate All Client Scores");
+    private static void searchMortgageEligibleClients() {
+        showHeader("Mortgage Eligible Clients");
+        println("Criteria: Age 25-50, Income >4000 DH, CDI Contract, Score >70, Married\n");
 
-        println("This will recalculate scores for all existing clients based on:");
-        println("- Professional Stability");
-        println("- Financial Capacity");
-        println("- Payment History");
-        println("- Client Relationship");
-        println("- Complementary Criteria");
-        println("");
+        try {
+            List<Employee> eligibleClients = AnalyticsService.findMortgageEligibleClients();
 
-        if (getYesNo("Are you sure you want to recalculate all scores?")) {
-            try {
-                ScoreRecalculationService.recalculateAllScores();
-                showSuccess("All client scores have been recalculated successfully!");
-            } catch (Exception e) {
-                showError("Error recalculating scores: " + e.getMessage());
+            if (eligibleClients.isEmpty()) {
+                showInfo("No clients meet the mortgage eligibility criteria.");
+                pauseBeforeMenu();
+                return;
             }
-        } else {
-            println("Operation cancelled.");
+
+            println("Found " + eligibleClients.size() + " eligible client(s):\n");
+
+            for (int i = 0; i < eligibleClients.size(); i++) {
+                Employee emp = eligibleClients.get(i);
+                println((i + 1) + ". " + emp.getFirstName() + " " + emp.getLastName());
+                println("   ID: " + emp.getId());
+                println("   Age: " + java.time.temporal.ChronoUnit.YEARS.between(emp.getDateOfBirth(), java.time.LocalDate.now()) + " years");
+                println("   Salary: " + emp.getSalary() + " DH");
+                println("   Contract: " + emp.getContractType() + " - " + emp.getEmploymentSector());
+                println("   Score: " + emp.getScore());
+                println("   Family Status: " + emp.getFamilyStatus());
+                println("");
+            }
+        } catch (Exception e) {
+            showError("Error searching for eligible clients: " + e.getMessage());
+        }
+
+        pauseBeforeMenu();
+    }
+
+    private static void showAtRiskClients() {
+        showHeader("At-Risk Clients Report (Top 10)");
+        println("Criteria: Score <60, Recent incidents (<6 months)\n");
+
+        try {
+            List<Person> atRiskClients = AnalyticsService.findAtRiskClients();
+
+            if (atRiskClients.isEmpty()) {
+                showInfo("No at-risk clients found.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            println("Found " + atRiskClients.size() + " at-risk client(s):\n");
+
+            for (int i = 0; i < atRiskClients.size(); i++) {
+                Person person = atRiskClients.get(i);
+                String clientType = person instanceof Employee ? "Employee" : "Professional";
+                double income = 0;
+
+                if (person instanceof Employee) {
+                    income = ((Employee) person).getSalary();
+                } else if (person instanceof Professional) {
+                    income = ((Professional) person).getIncome();
+                }
+
+                println((i + 1) + ". " + person.getFirstName() + " " + person.getLastName());
+                println("   ID: " + person.getId() + " | Type: " + clientType);
+                println("   Score: " + person.getScore() + " (HIGH RISK)");
+                println("   Income: " + income + " DH");
+                println("   Member Since: " + (person.getCreatedAt() != null ? person.getCreatedAt().toLocalDate() : "N/A"));
+                println("");
+            }
+
+            showWarning("These clients require immediate follow-up and support.");
+        } catch (Exception e) {
+            showError("Error generating at-risk report: " + e.getMessage());
+        }
+
+        pauseBeforeMenu();
+    }
+
+    private static void showEmploymentTypeDistribution() {
+        showHeader("Employment Type Distribution");
+
+        try {
+            Map<String, AnalyticsService.EmploymentTypeStats> distribution =
+                AnalyticsService.getEmploymentTypeDistribution();
+
+            if (distribution.isEmpty()) {
+                showInfo("No employment data available.");
+                pauseBeforeMenu();
+                return;
+            }
+
+            println("Employment Type Statistics:\n");
+
+            distribution.forEach((type, stats) -> {
+                println("═══ " + type + " ═══");
+                println("  Total Clients: " + stats.getCount());
+                println("  Average Score: " + String.format("%.2f", stats.getAvgScore()));
+                println("  Average Income: " + String.format("%.2f", stats.getAvgIncome()) + " DH");
+                println("  Approval Rate: " + String.format("%.2f", stats.getApprovalRate()) + "%");
+                println("");
+            });
+        } catch (Exception e) {
+            showError("Error generating distribution report: " + e.getMessage());
         }
 
         pauseBeforeMenu();
