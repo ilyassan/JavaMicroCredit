@@ -1,12 +1,18 @@
 import Models.Employee;
 import Models.Professional;
+import Models.Installement;
+import Models.PaymentRecord;
+import Enums.PaymentStatusEnum;
 import Services.ScoringService;
+import Services.PaymentService;
 import Views.View;
 import Views.EmployeeView;
 import Views.ProfessionalView;
 import Views.CreditView;
 import Views.AnalyticsView;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +22,9 @@ public class Main extends View {
     public static void main(String[] args) {
         Employee.getAll().forEach(ScoringService::updateClientScore);
         Professional.getAll().forEach(ScoringService::updateClientScore);
+
+        executeScheduledScoreCalculator();
+        executeScheduledInstallementsUpdater();
 
         showHeader("JavaMicroCredit - Credit Scoring System");
         println("Welcome to the Automated Credit Scoring System");
@@ -78,14 +87,43 @@ public class Main extends View {
     private static void executeScheduledInstallementsUpdater() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-
-
-        // Schedule the task to run every 1 hour
         scheduler.scheduleAtFixedRate(() -> {
-
-            //
-
+            try {
+                updateOverdueInstallments();
+            } catch (Exception e) {
+                System.err.println("Error updating overdue installments: " + e.getMessage());
+            }
         }, 0, 1, TimeUnit.HOURS);
+    }
+
+    private static void executeScheduledScoreCalculator() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        scheduler.scheduleAtFixedRate(() -> {
+            Employee.getAll().forEach(ScoringService::updateClientScore);
+            Professional.getAll().forEach(ScoringService::updateClientScore);
+        }, 0, 1, TimeUnit.MINUTES);
+    }
+
+    private static void updateOverdueInstallments() {
+        List<Installement> allInstallments = Installement.getAll();
+        LocalDate today = LocalDate.now();
+
+        allInstallments.stream()
+            .filter(inst -> {
+                PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(inst.getId());
+                return lastPayment == null;
+            })
+            .filter(inst -> {
+                return !inst.getDueDate().isAfter(today);
+            })
+            .forEach(inst -> {
+                PaymentStatusEnum status = PaymentService.getInstallementStatus(inst);
+
+                if (status == PaymentStatusEnum.LATE || status == PaymentStatusEnum.UNPAID_UNSETTLED) {
+                    PaymentRecord.create(inst.getId(), status);
+                }
+            });
     }
 
 }
