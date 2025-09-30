@@ -147,10 +147,7 @@ public class ScoringService {
     private static double calculateClientRelationship(Person person) {
         double score = 0;
 
-        boolean isNewClient = person.getCreatedAt() == null ||
-                              ChronoUnit.MONTHS.between(person.getCreatedAt(), java.time.LocalDateTime.now()) < 12;
-
-        if (isNewClient) {
+        if (isNewClient(person)) {
             long age = ChronoUnit.YEARS.between(person.getDateOfBirth(), LocalDate.now());
 
             if (age >= 18 && age <= 25) {
@@ -234,6 +231,16 @@ public class ScoringService {
             } else {
                 return income * 7;
             }
+        }
+    }
+
+    public static void updateClientScore(Person person) {
+        person.setScore(ScoringService.calculateScore(person));
+
+        if(person instanceof Employee) {
+            Employee.update((Employee) person);
+        }else if(person instanceof Professional) {
+            Professional.update((Professional) person);
         }
     }
 }

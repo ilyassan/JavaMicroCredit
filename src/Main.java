@@ -1,12 +1,22 @@
+import Models.Employee;
+import Models.Professional;
+import Services.ScoringService;
 import Views.View;
 import Views.EmployeeView;
 import Views.ProfessionalView;
 import Views.CreditView;
 import Views.AnalyticsView;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class Main extends View {
 
     public static void main(String[] args) {
+        Employee.getAll().forEach(ScoringService::updateClientScore);
+        Professional.getAll().forEach(ScoringService::updateClientScore);
+
         showHeader("JavaMicroCredit - Credit Scoring System");
         println("Welcome to the Automated Credit Scoring System");
 
@@ -69,4 +79,18 @@ public class Main extends View {
             }
         }
     }
+
+    private static void executeScheduledInstallementsUpdater() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+
+
+        // Schedule the task to run every 1 hour
+        scheduler.scheduleAtFixedRate(() -> {
+
+            //
+
+        }, 0, 1, TimeUnit.HOURS);
+    }
+
 }
