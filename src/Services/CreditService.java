@@ -28,7 +28,7 @@ public class CreditService {
         }
 
         double score = ScoringService.calculateScore(person);
-
+        System.out.println("{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}" + score);
         person.setScore(score);
         if (person instanceof Employee) {
             Employee.update((Employee) person);

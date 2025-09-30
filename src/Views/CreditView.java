@@ -74,6 +74,7 @@ public class CreditView extends View {
 
                 println("Client: " + employee.getFirstName() + " " + employee.getLastName());
                 println("Salary: " + employee.getSalary() + " DH");
+                println("Score: " + employee.getScore());
             } else {
                 professionalId = getInt("Enter Professional ID: ", 1, Integer.MAX_VALUE);
                 Professional professional = Professional.findById(professionalId);
@@ -86,6 +87,7 @@ public class CreditView extends View {
 
                 println("Client: " + professional.getFirstName() + " " + professional.getLastName());
                 println("Income: " + professional.getIncome() + " DH");
+                println("Score: " + professional.getScore());
             }
 
             // Credit Type

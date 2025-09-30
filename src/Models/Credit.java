@@ -2,7 +2,11 @@ package Models;
 
 import Enums.CreditType;
 import Enums.DecisionEnum;
+
+import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Credit extends Model {
     private Integer id;
@@ -121,6 +125,32 @@ public class Credit extends Model {
         return professionalId != null;
     }
 
+
+    public static List<Credit> getAll() {
+        String sql = "select * from credit";
+
+        return withStatement(sql, stmt -> {
+            ResultSet rs = stmt.executeQuery();
+            List<Credit> credits = new ArrayList<>();
+
+            while (rs.next()) {
+                credits.add(new Credit(
+                        rs.getInt("id"),
+                        rs.getObject("employeeId", Integer.class),
+                        rs.getObject("professionalId", Integer.class),
+                        rs.getObject("creditDate", LocalDate.class),
+                        rs.getDouble("requestedAmount"),
+                        rs.getDouble("approvedAmount"),
+                        rs.getDouble("interestRate"),
+                        rs.getInt("durationInMonths"),
+                        CreditType.valueOf(rs.getString("creditType")),
+                        DecisionEnum.valueOf(rs.getString("decision"))
+                ));
+            }
+            return credits;
+        });
+    }
+
     public static Credit create(Integer employeeId, Integer professionalId, LocalDate creditDate,
                                Double requestedAmount, Double approvedAmount, Double interestRate,
                                Integer durationInMonths, CreditType creditType, DecisionEnum decision) {
@@ -161,7 +191,7 @@ public class Credit extends Model {
         });
     }
 
-    public static java.util.List<Credit> findByDecision(DecisionEnum decision) {
+    public static List<Credit> findByDecision(DecisionEnum decision) {
         String sql = "SELECT * FROM Credit WHERE decision = ?::DecisionEnum";
 
         return withStatement(sql, stmt -> {
@@ -225,7 +255,7 @@ public class Credit extends Model {
         });
     }
 
-    public static java.util.List<Credit> getCreditsByClientId(Integer employeeId, Integer professionalId) {
+    public static List<Credit> getCreditsByClientId(Integer employeeId, Integer professionalId) {
         String sql = "SELECT * FROM Credit WHERE (employeeId = ? OR professionalId = ?) ORDER BY creditDate DESC";
 
         return withStatement(sql, stmt -> {

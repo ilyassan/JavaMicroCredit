@@ -1,15 +1,13 @@
 package Services;
 
-import Models.Employee;
-import Models.Professional;
-import Models.Person;
-import Models.PaymentRecord;
+import Models.*;
 import Enums.ContractType;
 import Enums.SectorType;
 import Enums.PaymentStatusEnum;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 public class ScoringService {
 
@@ -186,7 +184,7 @@ public class ScoringService {
         } else {
             long relationshipMonths = ChronoUnit.MONTHS.between(person.getCreatedAt(), java.time.LocalDateTime.now());
 
-            if (relationshipMonths > 36) {
+            if (relationshipMonths >= 36) {
                 score += 10;
             } else if (relationshipMonths >= 12) {
                 score += 8;
@@ -206,8 +204,15 @@ public class ScoringService {
     }
 
     public static boolean isNewClient(Person person) {
-        return person.getCreatedAt() == null ||
-               ChronoUnit.MONTHS.between(person.getCreatedAt(), java.time.LocalDateTime.now()) < 12;
+        List<Credit> credits = Credit.getAll();
+
+        return credits.stream().anyMatch(credit -> {
+            if (person instanceof Employee) {
+                return Objects.equals(person.getId(), credit.getEmployeeId());
+            } else {
+                return Objects.equals(person.getId(), credit.getProfessionalId());
+            }
+        });
     }
 
     public static double getMaxBorrowingAmount(Person person, double score) {
