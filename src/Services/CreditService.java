@@ -43,7 +43,7 @@ public class CreditService {
         Double approvedAmount = 0.0;
 
         double minScore = isNewClient ? 70 : 60;
-        double autoApprovalScore = 80;
+        double autoApprovalScore = 75;
         double minManualReviewScore = isNewClient ? 60 : 50;
 
         if (score < minManualReviewScore) {
