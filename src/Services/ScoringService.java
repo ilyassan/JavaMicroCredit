@@ -203,7 +203,7 @@ public class ScoringService {
     public static boolean isNewClient(Person person) {
         List<Credit> credits = Credit.getAll();
 
-        return credits.stream().anyMatch(credit -> {
+        return credits.stream().noneMatch(credit -> {
             if (person instanceof Employee) {
                 return Objects.equals(person.getId(), credit.getEmployeeId());
             } else {
