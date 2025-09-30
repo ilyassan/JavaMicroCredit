@@ -55,12 +55,38 @@ public class PaymentService {
 
         if (daysDifference <= 0) {
             return PaymentStatusEnum.ON_TIME;
+        } else if (daysDifference >= 1 && daysDifference <= 4) {
+            return PaymentStatusEnum.ON_TIME;
         } else if (daysDifference >= 5 && daysDifference <= 30) {
             return PaymentStatusEnum.PAID_LATE;
         } else if (daysDifference > 30) {
             return PaymentStatusEnum.UNPAID_SETTLED;
-        } else {
-            return PaymentStatusEnum.ON_TIME;
         }
+
+        return PaymentStatusEnum.ON_TIME;
+    }
+
+    public static PaymentStatusEnum getInstallementStatus(Installement installement) {
+        PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(installement.getId());
+
+        if (lastPayment != null) {
+            return lastPayment.getStatus();
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = installement.getDueDate();
+        long daysPastDue = ChronoUnit.DAYS.between(dueDate, today);
+
+        if (daysPastDue < 0) {
+            return null;
+        } else if (daysPastDue >= 0 && daysPastDue < 5) {
+            return null;
+        } else if (daysPastDue >= 5 && daysPastDue <= 30) {
+            return PaymentStatusEnum.LATE;
+        } else if (daysPastDue > 30) {
+            return PaymentStatusEnum.UNPAID_UNSETTLED;
+        }
+
+        return null;
     }
 }

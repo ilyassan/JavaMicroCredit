@@ -1,5 +1,6 @@
 package Views;
 
+import Enums.PaymentStatusEnum;
 import Models.Employee;
 import Models.Professional;
 import Models.Installement;
@@ -347,7 +348,13 @@ public class ProfessionalView extends View {
             Installement inst = installements.get(i);
             PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(inst.getId());
 
-            String paymentStatus = lastPayment != null ? lastPayment.getStatus().toString() : "NOT PAID";
+            String paymentStatus;
+            if (lastPayment != null) {
+                paymentStatus = lastPayment.getStatus().toString();
+            } else {
+                PaymentStatusEnum status = PaymentService.getInstallementStatus(inst);
+                paymentStatus = status != null ? status.toString() : "NOT PAID";
+            }
 
             println((i + 1) + ". Installement ID: " + inst.getId() +
                    " | Due Date: " + inst.getDueDate() +

@@ -24,7 +24,6 @@ public class Main extends View {
             String[] mainMenuOptions = {
                     "Client Management",
                     "Credit Scoring & Decision",
-                    "Payment History Management",
                     "Analytics & Reports",
                     "Exit System"
             };
@@ -39,13 +38,9 @@ public class Main extends View {
                     CreditView.showMenu();
                     break;
                 case 3:
-                    showWarning("ba9i");
-                    pauseBeforeMenu();
-                    break;
-                case 4:
                     AnalyticsView.showMenu();
                     break;
-                case 5:
+                case 4:
                     showSuccess("Thank you for using JavaMicroCredit System!");
                     System.exit(0);
                     break;
