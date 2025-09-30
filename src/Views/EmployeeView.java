@@ -310,7 +310,7 @@ public class EmployeeView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByClientId(employeeId, null);
+        List<Credit> credits = Credit.getCreditsByEmployeeId(employeeId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this employee.");
@@ -405,7 +405,7 @@ public class EmployeeView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByClientId(employeeId, null);
+        List<Credit> credits = Credit.getCreditsByEmployeeId(employeeId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this employee.");

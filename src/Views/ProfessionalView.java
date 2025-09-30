@@ -309,7 +309,7 @@ public class ProfessionalView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByClientId(null, professionalId);
+        List<Credit> credits = Credit.getCreditsByProfessionalId(professionalId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this professional.");
@@ -404,7 +404,7 @@ public class ProfessionalView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByClientId(null, professionalId);
+        List<Credit> credits = Credit.getCreditsByProfessionalId(professionalId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this professional.");

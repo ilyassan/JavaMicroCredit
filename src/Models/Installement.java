@@ -3,6 +3,8 @@ package Models;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class Installement extends Model {
     private Integer id;
@@ -103,15 +105,10 @@ public class Installement extends Model {
         return installements;
     }
 
-    public static List<Installement> getInstallementsByClientId(Integer employeeId, Integer professionalId) {
-        String sql = "SELECT i.* FROM Installement i " +
-                    "INNER JOIN Credit c ON i.creditId = c.id " +
-                    "WHERE (c.employeeId = ? OR c.professionalId = ?) " +
-                    "ORDER BY i.dueDate ASC";
+    public static List<Installement> getAll() {
+        String sql = "SELECT * FROM Installement";
 
         return withStatement(sql, stmt -> {
-            stmt.setObject(1, employeeId);
-            stmt.setObject(2, professionalId);
             java.sql.ResultSet rs = stmt.executeQuery();
             List<Installement> installements = new ArrayList<>();
 
@@ -125,45 +122,35 @@ public class Installement extends Model {
             }
             return installements;
         });
+    }
+
+    public static List<Installement> getInstallementsByClientId(Integer employeeId, Integer professionalId) {
+        List<Installement> allInstallements = getAll();
+        List<Credit> allCredits = Credit.getAll();
+
+        return allInstallements.stream()
+            .filter(inst -> allCredits.stream()
+                .filter(c -> c.getId().equals(inst.getCreditId()))
+                .anyMatch(c -> (c.getEmployeeId() != null && c.getEmployeeId().equals(employeeId)) ||
+                              (c.getProfessionalId() != null && c.getProfessionalId().equals(professionalId)))
+            )
+            .sorted(Comparator.comparing(Installement::getDueDate))
+            .collect(Collectors.toList());
     }
 
     public static Installement findById(Integer installementId) {
-        String sql = "SELECT * FROM Installement WHERE id = ?";
-
-        return withStatement(sql, stmt -> {
-            stmt.setInt(1, installementId);
-            java.sql.ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new Installement(
-                    rs.getInt("id"),
-                    rs.getInt("creditId"),
-                    rs.getObject("dueDate", LocalDate.class),
-                    rs.getDouble("amount")
-                );
-            }
-            return null;
-        });
+        return getAll().stream()
+            .filter(inst -> inst.getId().equals(installementId))
+            .findFirst()
+            .orElse(null);
     }
 
     public static List<Installement> getInstallementsByCreditId(Integer creditId) {
-        String sql = "SELECT * FROM Installement WHERE creditId = ? AND dueDate <= ? ORDER BY dueDate ASC";
-
-        return withStatement(sql, stmt -> {
-            stmt.setInt(1, creditId);
-            stmt.setObject(2, LocalDate.now());
-            java.sql.ResultSet rs = stmt.executeQuery();
-            List<Installement> installements = new ArrayList<>();
-
-            while (rs.next()) {
-                installements.add(new Installement(
-                    rs.getInt("id"),
-                    rs.getInt("creditId"),
-                    rs.getObject("dueDate", LocalDate.class),
-                    rs.getDouble("amount")
-                ));
-            }
-            return installements;
-        });
+        LocalDate today = LocalDate.now();
+        return getAll().stream()
+            .filter(inst -> inst.getCreditId().equals(creditId))
+            .filter(inst -> !inst.getDueDate().isAfter(today))
+            .sorted(Comparator.comparing(Installement::getDueDate))
+            .collect(Collectors.toList());
     }
 }

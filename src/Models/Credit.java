@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class Credit extends Model {
     private Integer id;
@@ -192,54 +194,16 @@ public class Credit extends Model {
     }
 
     public static List<Credit> findByDecision(DecisionEnum decision) {
-        String sql = "SELECT * FROM Credit WHERE decision = ?::DecisionEnum";
-
-        return withStatement(sql, stmt -> {
-            stmt.setString(1, decision.name());
-            java.sql.ResultSet rs = stmt.executeQuery();
-            java.util.List<Credit> credits = new java.util.ArrayList<>();
-
-            while (rs.next()) {
-                credits.add(new Credit(
-                    rs.getInt("id"),
-                    rs.getObject("employeeId", Integer.class),
-                    rs.getObject("professionalId", Integer.class),
-                    rs.getObject("creditDate", LocalDate.class),
-                    rs.getDouble("requestedAmount"),
-                    rs.getDouble("approvedAmount"),
-                    rs.getDouble("interestRate"),
-                    rs.getInt("durationInMonths"),
-                    CreditType.valueOf(rs.getString("creditType")),
-                    DecisionEnum.valueOf(rs.getString("decision"))
-                ));
-            }
-            return credits;
-        });
+        return getAll().stream()
+            .filter(c -> c.getDecision() == decision)
+            .collect(Collectors.toList());
     }
 
     public static Credit findById(Integer creditId) {
-        String sql = "SELECT * FROM Credit WHERE id = ?";
-
-        return withStatement(sql, stmt -> {
-            stmt.setInt(1, creditId);
-            java.sql.ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new Credit(
-                    rs.getInt("id"),
-                    rs.getObject("employeeId", Integer.class),
-                    rs.getObject("professionalId", Integer.class),
-                    rs.getObject("creditDate", LocalDate.class),
-                    rs.getDouble("requestedAmount"),
-                    rs.getDouble("approvedAmount"),
-                    rs.getDouble("interestRate"),
-                    rs.getInt("durationInMonths"),
-                    CreditType.valueOf(rs.getString("creditType")),
-                    DecisionEnum.valueOf(rs.getString("decision"))
-                );
-            }
-            return null;
-        });
+        return getAll().stream()
+            .filter(c -> c.getId().equals(creditId))
+            .findFirst()
+            .orElse(null);
     }
 
     public static boolean updateDecisionAndAmount(Integer creditId, DecisionEnum decision, Double approvedAmount) {
@@ -255,30 +219,17 @@ public class Credit extends Model {
         });
     }
 
-    public static List<Credit> getCreditsByClientId(Integer employeeId, Integer professionalId) {
-        String sql = "SELECT * FROM Credit WHERE (employeeId = ? OR professionalId = ?) ORDER BY creditDate DESC";
+    public static List<Credit> getCreditsByProfessionalId(Integer professionalId) {
+        return getAll().stream()
+            .filter(c -> professionalId.equals(c.getProfessionalId()))
+            .sorted(Comparator.comparing(Credit::getCreditDate).reversed())
+            .collect(Collectors.toList());
+    }
 
-        return withStatement(sql, stmt -> {
-            stmt.setObject(1, employeeId);
-            stmt.setObject(2, professionalId);
-            java.sql.ResultSet rs = stmt.executeQuery();
-            java.util.List<Credit> credits = new java.util.ArrayList<>();
-
-            while (rs.next()) {
-                credits.add(new Credit(
-                    rs.getInt("id"),
-                    rs.getObject("employeeId", Integer.class),
-                    rs.getObject("professionalId", Integer.class),
-                    rs.getObject("creditDate", LocalDate.class),
-                    rs.getDouble("requestedAmount"),
-                    rs.getDouble("approvedAmount"),
-                    rs.getDouble("interestRate"),
-                    rs.getInt("durationInMonths"),
-                    CreditType.valueOf(rs.getString("creditType")),
-                    DecisionEnum.valueOf(rs.getString("decision"))
-                ));
-            }
-            return credits;
-        });
+    public static List<Credit> getCreditsByEmployeeId(Integer employeeId) {
+        return getAll().stream()
+            .filter(c -> employeeId.equals(c.getEmployeeId()))
+            .sorted(Comparator.comparing(Credit::getCreditDate).reversed())
+            .collect(Collectors.toList());
     }
 }

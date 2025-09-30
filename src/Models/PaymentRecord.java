@@ -2,6 +2,10 @@ package Models;
 
 import Enums.PaymentStatusEnum;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class PaymentRecord extends Model {
     private Integer id;
@@ -75,37 +79,12 @@ public class PaymentRecord extends Model {
         });
     }
 
-    public static PaymentRecord getLatestByInstallementId(Integer installementId) {
-        String sql = "SELECT * FROM PaymentRecord WHERE installementId = ? ORDER BY createdAt DESC LIMIT 1";
+    public static List<PaymentRecord> getAll() {
+        String sql = "SELECT * FROM PaymentRecord";
 
         return withStatement(sql, stmt -> {
-            stmt.setInt(1, installementId);
             java.sql.ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new PaymentRecord(
-                    rs.getInt("id"),
-                    rs.getInt("installementId"),
-                    PaymentStatusEnum.valueOf(rs.getString("status")),
-                    rs.getObject("createdAt", LocalDateTime.class)
-                );
-            }
-            return null;
-        });
-    }
-
-    public static java.util.List<PaymentRecord> getPaymentRecordsByClientId(Integer employeeId, Integer professionalId) {
-        String sql = "SELECT pr.* FROM PaymentRecord pr " +
-                    "INNER JOIN Installement i ON pr.installementId = i.id " +
-                    "INNER JOIN Credit c ON i.creditId = c.id " +
-                    "WHERE (c.employeeId = ? OR c.professionalId = ?) " +
-                    "ORDER BY pr.createdAt DESC";
-
-        return withStatement(sql, stmt -> {
-            stmt.setObject(1, employeeId);
-            stmt.setObject(2, professionalId);
-            java.sql.ResultSet rs = stmt.executeQuery();
-            java.util.List<PaymentRecord> records = new java.util.ArrayList<>();
+            List<PaymentRecord> records = new ArrayList<>();
 
             while (rs.next()) {
                 records.add(new PaymentRecord(
@@ -117,5 +96,31 @@ public class PaymentRecord extends Model {
             }
             return records;
         });
+    }
+
+    public static PaymentRecord getLatestByInstallementId(Integer installementId) {
+        return getAll().stream()
+            .filter(pr -> pr.getInstallementId().equals(installementId))
+            .max(Comparator.comparing(PaymentRecord::getCreatedAt))
+            .orElse(null);
+    }
+
+    public static List<PaymentRecord> getPaymentRecordsByClientId(Integer employeeId, Integer professionalId) {
+        List<PaymentRecord> allPaymentRecords = getAll();
+        List<Installement> allInstallements = Installement.getAll();
+        List<Credit> allCredits = Credit.getAll();
+
+        return allPaymentRecords.stream()
+            .filter(pr -> {
+                return allInstallements.stream()
+                    .filter(inst -> inst.getId().equals(pr.getInstallementId()))
+                    .anyMatch(inst -> allCredits.stream()
+                        .filter(c -> c.getId().equals(inst.getCreditId()))
+                        .anyMatch(c -> (c.getEmployeeId() != null && c.getEmployeeId().equals(employeeId)) ||
+                                      (c.getProfessionalId() != null && c.getProfessionalId().equals(professionalId)))
+                    );
+            })
+            .sorted(Comparator.comparing(PaymentRecord::getCreatedAt).reversed())
+            .collect(Collectors.toList());
     }
 }

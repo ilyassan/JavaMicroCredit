@@ -118,35 +118,10 @@ public class Employee extends Person {
     }
 
     public static Employee findById(int employeeId) {
-        String sql = "SELECT * FROM Employee WHERE id = ?";
-
-        return withStatement(sql, stmt -> {
-            stmt.setInt(1, employeeId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new Employee(
-                        rs.getInt("id"),
-                        rs.getString("firstName"),
-                        rs.getString("lastName"),
-                        rs.getObject("dateOfBirth", LocalDate.class),
-                        rs.getString("city"),
-                        rs.getBoolean("investment"),
-                        rs.getBoolean("placement"),
-                        rs.getInt("childrenCount"),
-                        FamilyStatus.valueOf(rs.getString("familyStatus")),
-                        rs.getDouble("score"),
-                        rs.getDouble("salary"),
-                        rs.getInt("monthsInWork"),
-                        rs.getString("position"),
-                        ContractType.valueOf(rs.getString("contractType")),
-                        SectorType.valueOf(rs.getString("employmentSector")),
-                        rs.getObject("createdAt", LocalDateTime.class),
-                        rs.getObject("updatedAt", LocalDateTime.class)
-                );
-            }
-            return null;
-        });
+        return getAll().stream()
+            .filter(emp -> emp.getId() == employeeId)
+            .findFirst()
+            .orElse(null);
     }
 
     public static boolean delete(Integer employeeId) {
