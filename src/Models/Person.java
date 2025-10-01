@@ -47,7 +47,7 @@ public abstract class Person extends Model {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth ) {
         this.dateOfBirth = dateOfBirth;
     }
 

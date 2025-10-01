@@ -2,10 +2,7 @@ package Views;
 
 import Enums.CreditType;
 import Enums.DecisionEnum;
-import Models.Credit;
-import Models.Employee;
-import Models.Professional;
-import Models.Installement;
+import Models.*;
 import Services.CreditService;
 import java.util.List;
 
@@ -30,7 +27,7 @@ public class CreditView extends View {
                     reviewPendingCredits();
                     break;
                 case 3:
-                    showWarning("Coming soon...");
+                    showSpeceficCreditDetails();
                     pauseBeforeMenu();
                     break;
                 case 4:
@@ -240,6 +237,67 @@ public class CreditView extends View {
         }
 
         pauseBeforeMenu();
+    }
+
+    private static void showSpeceficCreditDetails() {
+        println("\nCredits:\n");
+
+        List<Credit> credits = Credit.getAll();
+
+        for (int i = 0; i < credits.size(); i++) {
+            Credit credit = credits.get(i);
+            println((i + 1) + ". Credit ID: " + credit.getId() +
+                    " | Type: " + credit.getCreditType() +
+                    " | Amount: " + credit.getApprovedAmount() + " DH" +
+                    " | Status: " + credit.getDecision());
+        }
+
+        println("");
+        int creditIndex = getInt("Enter credit number (1-" + credits.size() + "): ", 1, credits.size());
+        Credit selectedCredit = credits.get(creditIndex - 1);
+        showCreditDetails(selectedCredit);
+    }
+
+    private static void showCreditDetails(Credit credit) {
+        showHeader("Credit Details - ID: " + credit.getId());
+
+        // Display basic credit information
+        println("Credit Type: " + credit.getCreditType());
+        println("Credit Date: " + credit.getCreditDate());
+        println("Requested Amount: " + credit.getRequestedAmount() + " DH");
+        println("Approved Amount: " + credit.getApprovedAmount() + " DH");
+        println("Interest Rate: " + credit.getInterestRate() + "%");
+        println("Duration: " + credit.getDurationInMonths() + " months");
+        println("Decision: " + credit.getDecision());
+        println("");
+
+        Person person = null;
+
+        // Display client information
+        if (credit.getEmployeeId() != null) {
+            person = Employee.findById(credit.getEmployeeId());
+        } else if (credit.getProfessionalId() != null) {
+            person = Professional.findById(credit.getProfessionalId());
+        }
+
+        println("Client Type: " + (person instanceof Employee ? "Employee" : "Professional"));
+        println("Client: " + person.getFirstName() + " " + person.getLastName());
+        println("Salary: " + (person instanceof  Employee ? ((Employee) person).getSalary() : ((Professional) person).getIncome()) + " DH");
+        println("Score: " + person.getScore());
+
+        println("");
+
+        // Display installments if approved
+        if (credit.getDecision() == DecisionEnum.IMMEDIATE_APPROVAL) {
+            List<Installement> installments = Installement.getInstallementsByCreditId(credit.getId());
+            if (installments != null && !installments.isEmpty()) {
+                println("Total Installments: " + installments.size());
+            } else {
+                showInfo("No installments found for this credit.");
+            }
+        } else {
+            showInfo("No installments available (Credit not approved).");
+        }
     }
 
     private static void showInfo(String message) {
