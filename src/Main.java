@@ -3,6 +3,10 @@ import Models.Professional;
 import Models.Installement;
 import Models.PaymentRecord;
 import Enums.PaymentStatusEnum;
+import Repositories.EmployeeRepository;
+import Repositories.ProfessionalRepository;
+import Repositories.InstallementRepository;
+import Repositories.PaymentRecordRepository;
 import Services.ScoringService;
 import Services.PaymentService;
 import Views.View;
@@ -20,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 public class Main extends View {
 
     public static void main(String[] args) {
-        Employee.getAll().forEach(ScoringService::updateClientScore);
-        Professional.getAll().forEach(ScoringService::updateClientScore);
+        EmployeeRepository.getAll().forEach(ScoringService::updateClientScore);
+        ProfessionalRepository.getAll().forEach(ScoringService::updateClientScore);
 
         executeScheduledScoreCalculator();
         executeScheduledInstallementsUpdater();
@@ -100,18 +104,18 @@ public class Main extends View {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         scheduler.scheduleAtFixedRate(() -> {
-            Employee.getAll().forEach(ScoringService::updateClientScore);
-            Professional.getAll().forEach(ScoringService::updateClientScore);
+            EmployeeRepository.getAll().forEach(ScoringService::updateClientScore);
+            ProfessionalRepository.getAll().forEach(ScoringService::updateClientScore);
         }, 0, 1, TimeUnit.MINUTES);
     }
 
     private static void updateOverdueInstallments() {
-        List<Installement> allInstallments = Installement.getAll();
+        List<Installement> allInstallments = InstallementRepository.getAll();
         LocalDate today = LocalDate.now();
 
         allInstallments.stream()
             .filter(inst -> {
-                PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(inst.getId());
+                PaymentRecord lastPayment = PaymentRecordRepository.getLatestByInstallementId(inst.getId());
                 return lastPayment == null;
             })
             .filter(inst -> {
@@ -121,7 +125,7 @@ public class Main extends View {
                 PaymentStatusEnum status = PaymentService.getInstallementStatus(inst);
 
                 if (status == PaymentStatusEnum.LATE || status == PaymentStatusEnum.UNPAID_UNSETTLED) {
-                    PaymentRecord.create(inst.getId(), status);
+                    PaymentRecordRepository.create(inst.getId(), status);
                 }
             });
     }

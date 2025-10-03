@@ -8,6 +8,10 @@ import Models.PaymentRecord;
 import Models.Credit;
 import Enums.FamilyStatus;
 import Enums.SectorType;
+import Repositories.ProfessionalRepository;
+import Repositories.CreditRepository;
+import Repositories.InstallementRepository;
+import Repositories.PaymentRecordRepository;
 import Services.PaymentService;
 import java.time.LocalDate;
 import java.util.List;
@@ -100,7 +104,7 @@ public class ProfessionalView extends View {
             }
 
             // Create the professional
-            Professional professional = Professional.create(
+            Professional professional = ProfessionalRepository.create(
                 firstName, lastName, dateOfBirth, city,
                 investment, placement, childrenCount, familyStatus,
                 income, taxRegistrationNumber, businessSector, activity
@@ -120,7 +124,7 @@ public class ProfessionalView extends View {
         try {
             int professionalId = getInt("Enter professional ID: ", 1, Integer.MAX_VALUE);
 
-            return Professional.findById(professionalId);
+            return ProfessionalRepository.findById(professionalId);
         }
         catch (Exception e) {
             showError("Failed to select professional ID: " + e.getMessage());
@@ -212,7 +216,7 @@ public class ProfessionalView extends View {
             professional.setActivity(activity);
             professional.setUpdatedAt(java.time.LocalDateTime.now());
 
-            boolean updated = Professional.update(professional);
+            boolean updated = ProfessionalRepository.update(professional);
 
             if (updated) {
                 showSuccess("Professional updated successfully!");
@@ -248,7 +252,7 @@ public class ProfessionalView extends View {
                 return;
             }
 
-            boolean deleted = Professional.delete(professional.getId());
+            boolean deleted = ProfessionalRepository.delete(professional.getId());
 
             if (deleted) {
                 showSuccess("Professional deleted successfully!");
@@ -265,7 +269,7 @@ public class ProfessionalView extends View {
 
     private static void listAllProfessionals() {
         showHeader("List All Professionals");
-        List<Professional> professionals = Professional.getAll();
+        List<Professional> professionals = ProfessionalRepository.getAll();
 
         for (Professional professional : professionals) {
             showProfessionalDetails(professional);
@@ -302,7 +306,7 @@ public class ProfessionalView extends View {
         showHeader("Pay Installement");
 
         int professionalId = getInt("Enter Professional ID: ", 1, Integer.MAX_VALUE);
-        Professional professional = Professional.findById(professionalId);
+        Professional professional = ProfessionalRepository.findById(professionalId);
 
         if (professional == null) {
             showError("Professional not found with ID: " + professionalId);
@@ -310,7 +314,7 @@ public class ProfessionalView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByProfessionalId(professionalId);
+        List<Credit> credits = CreditRepository.getCreditsByProfessionalId(professionalId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this professional.");
@@ -333,7 +337,7 @@ public class ProfessionalView extends View {
         int creditIndex = getInt("Enter credit number (1-" + credits.size() + "): ", 1, credits.size());
         Credit selectedCredit = credits.get(creditIndex - 1);
 
-        List<Installement> installements = Installement.getInstallementsByCreditId(selectedCredit.getId());
+        List<Installement> installements = InstallementRepository.getInstallementsByCreditId(selectedCredit.getId());
 
         if (installements.isEmpty()) {
             showInfo("No installements due for this credit yet.");
@@ -346,7 +350,7 @@ public class ProfessionalView extends View {
         List<Installement> unpaidInstallements = new java.util.ArrayList<>();
         for (int i = 0; i < installements.size(); i++) {
             Installement inst = installements.get(i);
-            PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(inst.getId());
+            PaymentRecord lastPayment = PaymentRecordRepository.getLatestByInstallementId(inst.getId());
 
             String paymentStatus;
             if (lastPayment != null) {
@@ -376,7 +380,7 @@ public class ProfessionalView extends View {
         int installementIndex = getInt("Enter installement number to pay (1-" + installements.size() + "): ", 1, installements.size());
         Installement selectedInstallement = installements.get(installementIndex - 1);
 
-        PaymentRecord existingPayment = PaymentRecord.getLatestByInstallementId(selectedInstallement.getId());
+        PaymentRecord existingPayment = PaymentRecordRepository.getLatestByInstallementId(selectedInstallement.getId());
         if (existingPayment != null) {
             showError("This installement has already been paid.");
             pauseBeforeMenu();
@@ -403,7 +407,7 @@ public class ProfessionalView extends View {
         showHeader("View Professional Credits");
 
         int professionalId = getInt("Enter Professional ID: ", 1, Integer.MAX_VALUE);
-        Professional professional = Professional.findById(professionalId);
+        Professional professional = ProfessionalRepository.findById(professionalId);
 
         if (professional == null) {
             showError("Professional not found with ID: " + professionalId);
@@ -411,7 +415,7 @@ public class ProfessionalView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByProfessionalId(professionalId);
+        List<Credit> credits = CreditRepository.getCreditsByProfessionalId(professionalId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this professional.");

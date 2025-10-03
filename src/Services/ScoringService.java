@@ -1,6 +1,10 @@
 package Services;
 
 import Models.*;
+import Repositories.CreditRepository;
+import Repositories.PaymentRecordRepository;
+import Repositories.EmployeeRepository;
+import Repositories.ProfessionalRepository;
 import Enums.ContractType;
 import Enums.SectorType;
 import Enums.PaymentStatusEnum;
@@ -95,7 +99,7 @@ public class ScoringService {
             professionalId = ((Professional) person).getId();
         }
 
-        List<PaymentRecord> paymentRecords = PaymentRecord.getPaymentRecordsByClientId(employeeId, professionalId);
+        List<PaymentRecord> paymentRecords = PaymentRecordRepository.getPaymentRecordsByClientId(employeeId, professionalId);
 
         if (paymentRecords.isEmpty()) {
             return 0;
@@ -201,7 +205,7 @@ public class ScoringService {
     }
 
     public static boolean isNewClient(Person person) {
-        List<Credit> credits = Credit.getAll();
+        List<Credit> credits = CreditRepository.getAll();
 
         return credits.stream().noneMatch(credit -> {
             if (person instanceof Employee) {
@@ -238,9 +242,9 @@ public class ScoringService {
         person.setScore(ScoringService.calculateScore(person));
 
         if(person instanceof Employee) {
-            Employee.update((Employee) person);
+            EmployeeRepository.update((Employee) person);
         }else if(person instanceof Professional) {
-            Professional.update((Professional) person);
+            ProfessionalRepository.update((Professional) person);
         }
     }
 }

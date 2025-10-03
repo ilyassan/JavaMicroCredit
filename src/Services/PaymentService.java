@@ -7,13 +7,18 @@ import Models.Credit;
 import Models.Employee;
 import Models.Professional;
 import Models.Person;
+import Repositories.InstallementRepository;
+import Repositories.PaymentRecordRepository;
+import Repositories.CreditRepository;
+import Repositories.EmployeeRepository;
+import Repositories.ProfessionalRepository;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 public class PaymentService {
 
     public static PaymentRecord recordPayment(Integer installementId) {
-        Installement installement = Installement.findById(installementId);
+        Installement installement = InstallementRepository.findById(installementId);
 
         if (installement == null) {
             throw new RuntimeException("Installement not found");
@@ -24,15 +29,15 @@ public class PaymentService {
 
         PaymentStatusEnum status = determinePaymentStatus(dueDate, today);
 
-        PaymentRecord paymentRecord = PaymentRecord.create(installementId, status);
+        PaymentRecord paymentRecord = PaymentRecordRepository.create(installementId, status);
 
-        Credit credit = Credit.findById(installement.getCreditId());
+        Credit credit = CreditRepository.findById(installement.getCreditId());
         if (credit != null) {
             Person person = null;
             if (credit.getEmployeeId() != null) {
-                person = Employee.findById(credit.getEmployeeId());
+                person = EmployeeRepository.findById(credit.getEmployeeId());
             } else if (credit.getProfessionalId() != null) {
-                person = Professional.findById(credit.getProfessionalId());
+                person = ProfessionalRepository.findById(credit.getProfessionalId());
             }
 
             if (person != null) {
@@ -40,9 +45,9 @@ public class PaymentService {
                 person.setScore(newScore);
 
                 if (person instanceof Employee) {
-                    Employee.update((Employee) person);
+                    EmployeeRepository.update((Employee) person);
                 } else if (person instanceof Professional) {
-                    Professional.update((Professional) person);
+                    ProfessionalRepository.update((Professional) person);
                 }
             }
         }
@@ -67,7 +72,7 @@ public class PaymentService {
     }
 
     public static PaymentStatusEnum getInstallementStatus(Installement installement) {
-        PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(installement.getId());
+        PaymentRecord lastPayment = PaymentRecordRepository.getLatestByInstallementId(installement.getId());
 
         if (lastPayment != null) {
             return lastPayment.getStatus();

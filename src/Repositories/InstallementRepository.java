@@ -1,0 +1,114 @@
+package Repositories;
+
+import Models.Credit;
+import Models.Installement;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class InstallementRepository extends BaseRepository {
+
+    public static Installement create(Integer creditId, LocalDate dueDate, Double amount) {
+        String insertSql = "INSERT INTO Installement (creditId, dueDate, amount) VALUES (?, ?, ?)";
+
+        return withStatementReturning(insertSql, stmt -> {
+            stmt.setInt(1, creditId);
+            stmt.setObject(2, dueDate);
+            stmt.setDouble(3, amount);
+
+            stmt.executeUpdate();
+            java.sql.ResultSet keys = stmt.getGeneratedKeys();
+
+            if (keys.next()) {
+                Integer installementId = keys.getInt(1);
+
+                Installement installement = new Installement();
+                installement.setId(installementId);
+                installement.setCreditId(creditId);
+                installement.setDueDate(dueDate);
+                installement.setAmount(amount);
+
+                return installement;
+            }
+            throw new RuntimeException("Failed to create installement: no ID returned");
+        });
+    }
+
+    public static List<Installement> generateInstallements(Credit credit) {
+        List<Installement> installements = new ArrayList<>();
+
+        if (credit.getApprovedAmount() == null || credit.getApprovedAmount() <= 0) {
+            return installements;
+        }
+
+        Double principal = credit.getApprovedAmount();
+        Double interestRate = credit.getInterestRate();
+        Integer months = credit.getDurationInMonths();
+
+        Double totalInterest = principal * (interestRate / 100);
+        Double totalAmount = principal + totalInterest;
+        Double monthlyPayment = totalAmount / months;
+
+        LocalDate firstDueDate = credit.getCreditDate().plusMonths(1);
+
+        for (int i = 0; i < months; i++) {
+            LocalDate dueDate = firstDueDate.plusMonths(i);
+            Installement installement = create(credit.getId(), dueDate, monthlyPayment);
+            installements.add(installement);
+        }
+
+        return installements;
+    }
+
+    public static List<Installement> getAll() {
+        String sql = "SELECT * FROM Installement";
+
+        return withStatement(sql, stmt -> {
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<Installement> installements = new ArrayList<>();
+
+            while (rs.next()) {
+                installements.add(new Installement(
+                    rs.getInt("id"),
+                    rs.getInt("creditId"),
+                    rs.getObject("dueDate", LocalDate.class),
+                    rs.getDouble("amount")
+                ));
+            }
+            return installements;
+        });
+    }
+
+    public static List<Installement> getInstallementsByClientId(Integer employeeId, Integer professionalId) {
+        List<Installement> allInstallements = getAll();
+        List<Credit> allCredits = CreditRepository.getAll();
+
+        return allInstallements.stream()
+            .filter(inst -> allCredits.stream()
+                .filter(c -> c.getId().equals(inst.getCreditId()))
+                .anyMatch(c -> (c.getEmployeeId() != null && c.getEmployeeId().equals(employeeId)) ||
+                              (c.getProfessionalId() != null && c.getProfessionalId().equals(professionalId)))
+            )
+            .sorted(Comparator.comparing(Installement::getDueDate))
+            .collect(Collectors.toList());
+    }
+
+    public static Installement findById(Integer installementId) {
+        return getAll().stream()
+            .filter(inst -> inst.getId().equals(installementId))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public static List<Installement> getInstallementsByCreditId(Integer creditId) {
+        LocalDate today = LocalDate.now();
+        return getAll().stream()
+            .filter(inst -> inst.getCreditId().equals(creditId))
+            .filter(inst -> !inst.getDueDate().isAfter(today))
+            .sorted(Comparator.comparing(Installement::getDueDate))
+            .collect(Collectors.toList());
+    }
+}

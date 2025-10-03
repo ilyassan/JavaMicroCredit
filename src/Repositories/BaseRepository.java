@@ -1,12 +1,12 @@
-package Models;
+package Repositories;
 
 import Database.DB;
 import java.sql.*;
 
-public abstract class Model {
+public abstract class BaseRepository {
     protected static final DB db = DB.getInstance();
 
-    public static interface StatementExecutor<T> {
+    public interface StatementExecutor<T> {
         T apply(PreparedStatement stmt) throws SQLException;
     }
 

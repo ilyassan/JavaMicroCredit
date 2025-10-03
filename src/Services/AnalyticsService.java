@@ -5,6 +5,10 @@ import Models.Professional;
 import Models.Person;
 import Models.Credit;
 import Models.PaymentRecord;
+import Repositories.EmployeeRepository;
+import Repositories.ProfessionalRepository;
+import Repositories.CreditRepository;
+import Repositories.PaymentRecordRepository;
 import Enums.ContractType;
 import Enums.FamilyStatus;
 import Enums.SectorType;
@@ -20,8 +24,8 @@ import java.util.Comparator;
 public class AnalyticsService {
 
     public static List<Person> sortByScore(boolean descending) {
-        List<Employee> employees = Employee.getAll();
-        List<Professional> professionals = Professional.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
+        List<Professional> professionals = ProfessionalRepository.getAll();
 
         List<Person> sorted = Stream.concat(employees.stream(), professionals.stream())
             .sorted((p1, p2) -> {
@@ -40,8 +44,8 @@ public class AnalyticsService {
     }
 
     public static List<Person> sortByIncome(boolean descending) {
-        List<Employee> employees = Employee.getAll();
-        List<Professional> professionals = Professional.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
+        List<Professional> professionals = ProfessionalRepository.getAll();
 
         List<Person> sorted = Stream.concat(employees.stream(), professionals.stream())
             .sorted((p1, p2) -> {
@@ -60,8 +64,8 @@ public class AnalyticsService {
     }
 
     public static List<Person> sortByRelationshipSeniority(boolean descending) {
-        List<Employee> employees = Employee.getAll();
-        List<Professional> professionals = Professional.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
+        List<Professional> professionals = ProfessionalRepository.getAll();
 
         List<Person> sorted = Stream.concat(employees.stream(), professionals.stream())
             .sorted((p1, p2) -> {
@@ -96,7 +100,7 @@ public class AnalyticsService {
     }
 
     public static List<Employee> findMortgageEligibleClients() {
-        List<Employee> employees = Employee.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
         LocalDate today = LocalDate.now();
 
         List<Employee> result = employees.stream()
@@ -122,9 +126,9 @@ public class AnalyticsService {
     }
 
     public static List<Person> findAtRiskClients() {
-        List<Employee> employees = Employee.getAll();
-        List<Professional> professionals = Professional.getAll();
-        List<PaymentRecord> allPaymentRecords = PaymentRecord.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
+        List<Professional> professionals = ProfessionalRepository.getAll();
+        List<PaymentRecord> allPaymentRecords = PaymentRecordRepository.getAll();
 
         LocalDate sixMonthsAgo = LocalDate.now().minusMonths(6);
 
@@ -161,8 +165,8 @@ public class AnalyticsService {
     }
 
     public static Map<String, EmploymentTypeStats> getEmploymentTypeDistribution() {
-        List<Employee> employees = Employee.getAll();
-        List<Credit> allCredits = Credit.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
+        List<Credit> allCredits = CreditRepository.getAll();
 
         Map<String, EmploymentTypeStats> distribution = new HashMap<>();
 

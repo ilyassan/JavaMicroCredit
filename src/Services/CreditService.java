@@ -3,10 +3,13 @@ package Services;
 import Enums.CreditType;
 import Enums.DecisionEnum;
 import Models.Credit;
-import Models.Installement;
 import Models.Employee;
 import Models.Professional;
 import Models.Person;
+import Repositories.CreditRepository;
+import Repositories.EmployeeRepository;
+import Repositories.ProfessionalRepository;
+import Repositories.InstallementRepository;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,9 +21,9 @@ public class CreditService {
         Person person = null;
 
         if (employeeId != null) {
-            person = Employee.findById(employeeId);
+            person = EmployeeRepository.findById(employeeId);
         } else if (professionalId != null) {
-            person = Professional.findById(professionalId);
+            person = ProfessionalRepository.findById(professionalId);
         }
 
         if (person == null) {
@@ -31,9 +34,9 @@ public class CreditService {
         System.out.println("{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}" + score);
         person.setScore(score);
         if (person instanceof Employee) {
-            Employee.update((Employee) person);
+            EmployeeRepository.update((Employee) person);
         } else if (person instanceof Professional) {
-            Professional.update((Professional) person);
+            ProfessionalRepository.update((Professional) person);
         }
 
         boolean isNewClient = ScoringService.isNewClient(person);
@@ -62,7 +65,7 @@ public class CreditService {
 
         LocalDate creditDate = LocalDate.now();
 
-        Credit credit = Credit.create(
+        Credit credit = CreditRepository.create(
             employeeId,
             professionalId,
             creditDate,
@@ -75,7 +78,7 @@ public class CreditService {
         );
 
         if (decision == DecisionEnum.IMMEDIATE_APPROVAL) {
-            List<Installement> installements = Installement.generateInstallements(credit);
+            java.util.List installements = InstallementRepository.generateInstallements(credit);
             System.out.println("Credit approved! " + installements.size() + " installments generated.");
         } else {
             System.out.println("Credit decision: " + decision);

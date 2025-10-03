@@ -8,6 +8,10 @@ import Models.Credit;
 import Enums.ContractType;
 import Enums.FamilyStatus;
 import Enums.SectorType;
+import Repositories.EmployeeRepository;
+import Repositories.CreditRepository;
+import Repositories.InstallementRepository;
+import Repositories.PaymentRecordRepository;
 import Services.PaymentService;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -101,7 +105,7 @@ public class EmployeeView extends View {
             SectorType employmentSector = getSectorType("Select employment sector:");
 
             // Create the employee
-            Employee employee = Employee.create(
+            Employee employee = EmployeeRepository.create(
                 firstName, lastName, dateOfBirth, city,
                 investment, placement, childrenCount, familyStatus,
                 salary, monthsInWork, position, contractType, employmentSector
@@ -121,7 +125,7 @@ public class EmployeeView extends View {
         try {
             int employeeId = getInt("Enter Employee ID: ", 1, Integer.MAX_VALUE);
 
-            return Employee.findById(employeeId);
+            return EmployeeRepository.findById(employeeId);
         }
         catch (Exception e) {
             showError("Failed to select employee ID: " + e.getMessage());
@@ -213,7 +217,7 @@ public class EmployeeView extends View {
             employee.setEmploymentSector(employmentSector);
             employee.setUpdatedAt(java.time.LocalDateTime.now());
 
-            boolean updated = Employee.update(employee);
+            boolean updated = EmployeeRepository.update(employee);
 
             if (updated) {
                 showSuccess("Employee updated successfully!");
@@ -249,7 +253,7 @@ public class EmployeeView extends View {
                 return;
             }
 
-            boolean deleted = Employee.delete(employee.getId());
+            boolean deleted = EmployeeRepository.delete(employee.getId());
 
             if (deleted) {
                 showSuccess("Employee deleted successfully!");
@@ -266,7 +270,7 @@ public class EmployeeView extends View {
 
     private static void listAllEmployees() {
         showHeader("List All Employees");
-        List<Employee> employees = Employee.getAll();
+        List<Employee> employees = EmployeeRepository.getAll();
 
         for (Employee employee : employees) {
             showEmployeeDetails(employee);
@@ -303,7 +307,7 @@ public class EmployeeView extends View {
         showHeader("Pay Installement");
 
         int employeeId = getInt("Enter Employee ID: ", 1, Integer.MAX_VALUE);
-        Employee employee = Employee.findById(employeeId);
+        Employee employee = EmployeeRepository.findById(employeeId);
 
         if (employee == null) {
             showError("Employee not found with ID: " + employeeId);
@@ -311,7 +315,7 @@ public class EmployeeView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByEmployeeId(employeeId);
+        List<Credit> credits = CreditRepository.getCreditsByEmployeeId(employeeId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this employee.");
@@ -334,7 +338,7 @@ public class EmployeeView extends View {
         int creditIndex = getInt("Enter credit number (1-" + credits.size() + "): ", 1, credits.size());
         Credit selectedCredit = credits.get(creditIndex - 1);
 
-        List<Installement> installements = Installement.getInstallementsByCreditId(selectedCredit.getId());
+        List<Installement> installements = InstallementRepository.getInstallementsByCreditId(selectedCredit.getId());
 
         if (installements.isEmpty()) {
             showInfo("No installements due for this credit yet.");
@@ -347,7 +351,7 @@ public class EmployeeView extends View {
         List<Installement> unpaidInstallements = new ArrayList<>();
         for (int i = 0; i < installements.size(); i++) {
             Installement inst = installements.get(i);
-            PaymentRecord lastPayment = PaymentRecord.getLatestByInstallementId(inst.getId());
+            PaymentRecord lastPayment = PaymentRecordRepository.getLatestByInstallementId(inst.getId());
 
             String paymentStatus;
             if (lastPayment != null) {
@@ -377,7 +381,7 @@ public class EmployeeView extends View {
         int installementIndex = getInt("Enter installement number to pay (1-" + installements.size() + "): ", 1, installements.size());
         Installement selectedInstallement = installements.get(installementIndex - 1);
 
-        PaymentRecord existingPayment = PaymentRecord.getLatestByInstallementId(selectedInstallement.getId());
+        PaymentRecord existingPayment = PaymentRecordRepository.getLatestByInstallementId(selectedInstallement.getId());
         if (existingPayment != null) {
             showError("This installement has already been paid.");
             pauseBeforeMenu();
@@ -404,7 +408,7 @@ public class EmployeeView extends View {
         showHeader("View Employee Credits");
 
         int employeeId = getInt("Enter Employee ID: ", 1, Integer.MAX_VALUE);
-        Employee employee = Employee.findById(employeeId);
+        Employee employee = EmployeeRepository.findById(employeeId);
 
         if (employee == null) {
             showError("Employee not found with ID: " + employeeId);
@@ -412,7 +416,7 @@ public class EmployeeView extends View {
             return;
         }
 
-        List<Credit> credits = Credit.getCreditsByEmployeeId(employeeId);
+        List<Credit> credits = CreditRepository.getCreditsByEmployeeId(employeeId);
 
         if (credits.isEmpty()) {
             showInfo("No credits found for this employee.");

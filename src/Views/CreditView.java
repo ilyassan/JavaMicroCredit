@@ -3,6 +3,10 @@ package Views;
 import Enums.CreditType;
 import Enums.DecisionEnum;
 import Models.*;
+import Repositories.EmployeeRepository;
+import Repositories.ProfessionalRepository;
+import Repositories.CreditRepository;
+import Repositories.InstallementRepository;
 import Services.CreditService;
 import java.util.List;
 
@@ -61,7 +65,7 @@ public class CreditView extends View {
             // Get client ID and verify existence
             if (clientTypeChoice == 1) {
                 employeeId = getInt("Enter Employee ID: ", 1, Integer.MAX_VALUE);
-                Employee employee = Employee.findById(employeeId);
+                Employee employee = EmployeeRepository.findById(employeeId);
 
                 if (employee == null) {
                     showError("Employee not found with ID: " + employeeId);
@@ -74,7 +78,7 @@ public class CreditView extends View {
                 println("Score: " + employee.getScore());
             } else {
                 professionalId = getInt("Enter Professional ID: ", 1, Integer.MAX_VALUE);
-                Professional professional = Professional.findById(professionalId);
+                Professional professional = ProfessionalRepository.findById(professionalId);
 
                 if (professional == null) {
                     showError("Professional not found with ID: " + professionalId);
@@ -137,7 +141,7 @@ public class CreditView extends View {
     private static void reviewPendingCredits() {
         showHeader("Credits Pending Manual Review");
 
-        List<Credit> pendingCredits = Credit.findByDecision(DecisionEnum.MANUAL_REVIEW);
+        List<Credit> pendingCredits = CreditRepository.findByDecision(DecisionEnum.MANUAL_REVIEW);
 
         if (pendingCredits.isEmpty()) {
             showInfo("No credits pending manual review.");
@@ -158,14 +162,14 @@ public class CreditView extends View {
             println("Duration: " + credit.getDurationInMonths() + " months");
 
             if (credit.getEmployeeId() != null) {
-                Employee employee = Employee.findById(credit.getEmployeeId());
+                Employee employee = EmployeeRepository.findById(credit.getEmployeeId());
                 if (employee != null) {
                     println("Client: " + employee.getFirstName() + " " + employee.getLastName() + " (Employee)");
                     println("Salary: " + employee.getSalary() + " DH");
                     println("Score: " + employee.getScore());
                 }
             } else if (credit.getProfessionalId() != null) {
-                Professional professional = Professional.findById(credit.getProfessionalId());
+                Professional professional = ProfessionalRepository.findById(credit.getProfessionalId());
                 if (professional != null) {
                     println("Client: " + professional.getFirstName() + " " + professional.getLastName() + " (Professional)");
                     println("Income: " + professional.getIncome() + " DH");
@@ -221,13 +225,13 @@ public class CreditView extends View {
                 return;
         }
 
-        boolean updated = Credit.updateDecisionAndAmount(credit.getId(), newDecision, approvedAmount);
+        boolean updated = CreditRepository.updateDecisionAndAmount(credit.getId(), newDecision, approvedAmount);
 
         if (updated) {
             if (newDecision == DecisionEnum.IMMEDIATE_APPROVAL) {
                 credit.setDecision(newDecision);
                 credit.setApprovedAmount(approvedAmount);
-                List<Installement> installements = Installement.generateInstallements(credit);
+                List<Installement> installements = InstallementRepository.generateInstallements(credit);
                 showSuccess("Credit approved! " + installements.size() + " installments generated.");
             } else {
                 showSuccess("Credit rejected.");
@@ -242,7 +246,7 @@ public class CreditView extends View {
     private static void showSpeceficCreditDetails() {
         println("\nCredits:\n");
 
-        List<Credit> credits = Credit.getAll();
+        List<Credit> credits = CreditRepository.getAll();
 
         for (int i = 0; i < credits.size(); i++) {
             Credit credit = credits.get(i);
@@ -275,9 +279,9 @@ public class CreditView extends View {
 
         // Display client information
         if (credit.getEmployeeId() != null) {
-            person = Employee.findById(credit.getEmployeeId());
+            person = EmployeeRepository.findById(credit.getEmployeeId());
         } else if (credit.getProfessionalId() != null) {
-            person = Professional.findById(credit.getProfessionalId());
+            person = ProfessionalRepository.findById(credit.getProfessionalId());
         }
 
         println("Client Type: " + (person instanceof Employee ? "Employee" : "Professional"));
@@ -289,7 +293,7 @@ public class CreditView extends View {
 
         // Display installments if approved
         if (credit.getDecision() == DecisionEnum.IMMEDIATE_APPROVAL) {
-            List<Installement> installments = Installement.getInstallementsByCreditId(credit.getId());
+            List<Installement> installments = InstallementRepository.getInstallementsByCreditId(credit.getId());
             if (installments != null && !installments.isEmpty()) {
                 println("Total Installments: " + installments.size());
             } else {

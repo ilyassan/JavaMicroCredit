@@ -5,7 +5,7 @@ import Enums.FamilyStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public abstract class Person extends Model {
+public abstract class Person {
     protected Integer id;
     protected String firstName;
     protected String lastName;
